@@ -1,0 +1,24 @@
+package be.glever.ant.util;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+public class ByteUtilTest {
+
+	@Test
+	public void validateHasMask() {
+		Assert.assertTrue(ByteUtils.hasMask(0x1, 0b1));
+		Assert.assertFalse(ByteUtils.hasMask(0x1, 0b10));
+		Assert.assertTrue(ByteUtils.hasMask(0b11, 0b1));
+		Assert.assertTrue(ByteUtils.hasMask(0b11, 0b10));
+		Assert.assertTrue(ByteUtils.hasMask(0b11, 0b11));
+		Assert.assertFalse(ByteUtils.hasMask(0b11, 0b111));
+	}
+	
+	@Test
+	public void validateHasBitSet() {
+		Assert.assertTrue(ByteUtils.hasBitSet(0b1, 0));
+		Assert.assertFalse(ByteUtils.hasBitSet(0b1, 1));
+		Assert.assertTrue(ByteUtils.hasBitSet(0b11, 1));
+	}
+}
