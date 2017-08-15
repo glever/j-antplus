@@ -13,4 +13,4 @@ License is GPL3.
 
 Compatibility notes:
 This project uses usb4java-javax, which underneath uses libusb. 
-There seems to be a mismatch between the default windows10 WHQL driver (libusb 1.2.40.201, provides by dynastream) and libusb. I resolved this by using the "Zadig" tool, select the ant-m usb stick (you may neet to go to "Options" -> "list all devices") and *downgrade* the driver to 1.2.6.0 (which is actually the latest libusb driver I could find on the net).
+There seems to be a mismatch between the default windows10 WHQL driver (libusb 1.2.40.201, provided by dynastream) and libusb. I resolved this by using the "Zadig" tool, select the ant-m usb stick (you may neet to go to "Options" -> "list all devices") and *downgrade* the driver to 1.2.6.0 (which is actually the latest libusb driver I could find on the net).
