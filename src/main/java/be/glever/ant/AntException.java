@@ -13,4 +13,8 @@ public class AntException extends Exception{
 		super(message, e);
 	}
 
+	public AntException(Throwable t) {
+		super(t);
+	}
+
 }

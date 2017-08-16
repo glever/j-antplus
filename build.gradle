@@ -18,9 +18,11 @@ repositories {
 
 dependencies {
     api 'javax.usb:usb-api:1.0.2'
+    api 'org.slf4j:slf4j-api:1.7.25'
     
     implementation 'org.usb4java:usb4java-javax:1.2.0'
-
+	implementation 'ch.qos.logback:logback-core:1.2.3'
+	implementation 'ch.qos.logback:logback-classic:1.2.3'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
