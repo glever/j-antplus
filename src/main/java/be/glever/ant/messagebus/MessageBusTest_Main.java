@@ -1,4 +1,4 @@
-package be.glever.anttest;
+package be.glever.ant.messagebus;
 
 import java.util.Spliterator;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -9,7 +9,7 @@ import java.util.stream.StreamSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import be.glever.anttest.MessageBusTest_Main.QueueElement;
+import be.glever.ant.messagebus.MessageBusTest_Main.QueueElement;
 
 public class MessageBusTest_Main {
 	private static final Logger LOG = LoggerFactory.getLogger(MessageBusTest_Main.class);
@@ -66,66 +66,6 @@ public class MessageBusTest_Main {
 			}
 
 		}
-	}
-
-	public static class QueueElement<T> {
-		private T t;
-		private boolean poison;
-
-		public QueueElement(T t, boolean poison) {
-			this.t = t;
-			this.poison = poison;
-		}
-
-		public T get() {
-			return t;
-		}
-
-		public boolean isPoison() {
-			return poison;
-		}
-
-	}
-
-	public static class MySpliterator<T> implements Spliterator<T> {
-		private LinkedBlockingQueue<QueueElement<T>> queue;
-
-		public MySpliterator(LinkedBlockingQueue<QueueElement<T>> queue) {
-			this.queue = queue;
-		}
-
-		@Override
-		public boolean tryAdvance(Consumer<? super T> action) {
-			try {
-				QueueElement<T> t = this.queue.take();
-				if (!t.isPoison()) {
-					action.accept(t.get());
-					return true;
-				}else {
-					LOG.info("received poison message, stopping");
-				}
-			} catch (InterruptedException e) {
-				Thread.interrupted();
-				LOG.info("Interrupted, only reason would be to stop consuming");
-			}
-			return false;
-		}
-
-		@Override
-		public Spliterator<T> trySplit() {
-			return null;
-		}
-
-		@Override
-		public long estimateSize() {
-			return Long.MAX_VALUE;
-		}
-
-		@Override
-		public int characteristics() {
-			return Spliterator.ORDERED;
-		}
-
 	}
 
 }
