@@ -41,14 +41,14 @@ public class MessageRegistry {
 	 * @param bytes
 	 * @return
 	 */
-	public AbstractAntMessage parse(byte[] bytes) throws AntException {
+	public AntMessage parse(byte[] bytes) throws AntException {
 		Class<? extends AbstractAntMessage> msgImpl = this.registry.get(bytes[2]);
-		AbstractAntMessage messageInstance = instantiate(msgImpl);
+		AntMessage messageInstance = instantiate(msgImpl);
 		messageInstance.parse(bytes);
 		return messageInstance;
 	}
 
-	private AbstractAntMessage instantiate(Class<? extends AbstractAntMessage> msgImplClass) throws AntException {
+	private AntMessage instantiate(Class<? extends AbstractAntMessage> msgImplClass) throws AntException {
 		try {
 			return msgImplClass.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {

@@ -5,12 +5,14 @@ import java.util.Arrays;
 import be.glever.ant.AntException;
 import be.glever.ant.util.ByteUtils;
 
-public abstract class AbstractAntMessage {
+public abstract class AbstractAntMessage implements AntMessage {
 
 	private byte sync = (byte) 0xa4; // TODO synchronous mode (0xa5 used for WRITE mode) is currently unsupported
 
+	@Override
 	public abstract byte getMessageId();
 
+	@Override
 	public abstract byte[] getMessageContent();
 
 	public abstract void setMessageBytes(byte[] messageContentBytes) throws AntException;
@@ -27,6 +29,7 @@ public abstract class AbstractAntMessage {
 		return (byte) getMessageContent().length;
 	}
 
+	@Override
 	public void parse(byte[] bytes) throws AntException {
 		validateNumberDataBytes(bytes);
 		validateChecksum(bytes);

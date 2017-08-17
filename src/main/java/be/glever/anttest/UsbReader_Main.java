@@ -22,6 +22,7 @@ import javax.usb.event.UsbPipeErrorEvent;
 import javax.usb.event.UsbPipeListener;
 
 import be.glever.ant.AntUtil;
+import be.glever.ant.usb.UsbReader;
 import be.glever.ant.util.ByteUtils;
 
 public class UsbReader_Main {

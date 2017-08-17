@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Small messagebus implementation using a blocking queue. Messages are dispatched by a single dedicated thread meaning listeners are running sequentially. 
+ * Small messagebus implementation using a blocking queue. Messages are dispatched by a single dedicated thread meaning listeners run sequentially. 
  * @author glen
  *
  * @param <T>
