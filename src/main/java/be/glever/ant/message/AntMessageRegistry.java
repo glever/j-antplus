@@ -12,10 +12,10 @@ import be.glever.ant.message.configuration.SearchTimeoutMessage;
 import be.glever.ant.message.configuration.UnassignChannelMessage;
 import be.glever.ant.message.requestedresponse.CapabilitiesResponseMessage;
 
-public class MessageRegistry {
+public class AntMessageRegistry {
 	private Map<Byte, Class<? extends AbstractAntMessage>> registry = new HashMap<>();
 
-	public MessageRegistry() throws AntException {
+	public AntMessageRegistry() throws AntException {
 		add(AssignChannelMessage.class);
 		add(ChannelIdMessage.class);
 		add(ChannelPeriodMessage.class);
@@ -42,7 +42,8 @@ public class MessageRegistry {
 	 * @return
 	 */
 	public AntMessage parse(byte[] bytes) throws AntException {
-		Class<? extends AbstractAntMessage> msgImpl = this.registry.get(bytes[2]);
+		byte msgId = bytes[2];
+		Class<? extends AbstractAntMessage> msgImpl = this.registry.get(msgId);
 		AntMessage messageInstance = instantiate(msgImpl);
 		messageInstance.parse(bytes);
 		return messageInstance;
