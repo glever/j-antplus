@@ -26,6 +26,10 @@ public class ChannelStatusMessage extends AbstractAntMessage {
 		return this.bytes[0];
 	}
 
+	public CHANNEL_STATUS getChannelStatus() {
+		return CHANNEL_STATUS.fromValue(bytes[1]);
+	}
+
 	public static enum CHANNEL_STATUS {
 		UnAssigned, Assigned, Searching, Tracking;
 
@@ -44,4 +48,5 @@ public class ChannelStatusMessage extends AbstractAntMessage {
 			}
 		}
 	}
+
 }
