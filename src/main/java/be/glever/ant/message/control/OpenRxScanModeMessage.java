@@ -3,11 +3,14 @@ package be.glever.ant.message.control;
 import be.glever.ant.AntException;
 import be.glever.ant.message.AbstractAntMessage;
 
-public class OpenRxScanMode extends AbstractAntMessage {
+public class OpenRxScanModeMessage extends AbstractAntMessage {
 
 	private byte[] bytes;
 
-	public OpenRxScanMode(boolean synchronousPacketsOnly) {
+	public OpenRxScanModeMessage() {
+	}
+
+	public OpenRxScanModeMessage(boolean synchronousPacketsOnly) {
 		this.bytes = new byte[] { 0, (byte) (synchronousPacketsOnly ? 1 : 0) };
 	}
 

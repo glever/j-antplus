@@ -5,11 +5,15 @@ import be.glever.ant.message.AbstractAntMessage;
 
 public class CloseChannelMessage extends AbstractAntMessage {
 
-	 private byte[] bytes;
+	private byte[] bytes;
+
+	public CloseChannelMessage() {
+	}
 
 	public CloseChannelMessage(byte channelNr) {
-		 this.bytes = new byte[] {channelNr};
+		this.bytes = new byte[] { channelNr };
 	}
+
 	@Override
 	public byte getMessageId() {
 		return 0x4c;
@@ -24,7 +28,7 @@ public class CloseChannelMessage extends AbstractAntMessage {
 	public void setMessageBytes(byte[] messageContentBytes) throws AntException {
 		this.bytes = messageContentBytes;
 	}
-	
+
 	public byte getChannelNr() {
 		return bytes[0];
 	}

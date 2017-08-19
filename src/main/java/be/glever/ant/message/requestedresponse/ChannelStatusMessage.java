@@ -7,6 +7,8 @@ public class ChannelStatusMessage extends AbstractAntMessage {
 
 	private byte[] bytes;
 
+	public ChannelStatusMessage() {
+	}
 	@Override
 	public byte getMessageId() {
 		return 0x52;

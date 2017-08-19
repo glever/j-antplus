@@ -11,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Small messagebus implementation using a blocking queue. Messages are dispatched by a single dedicated thread meaning listeners run sequentially. 
+ * Small messagebus implementation using a blocking queue. Messages are
+ * dispatched by a single dedicated thread meaning listeners run sequentially.
+ * 
  * @author glen
  *
  * @param <T>
@@ -32,12 +34,15 @@ public class MessageBus<T> {
 	}
 
 	private void notifyListeners(T item) {
+		LOG.debug("Received {}", item);
 		listenerConfigs.removeIf(
 				listenerConfig -> listenerConfig.timeoutOccurred() || listenerConfig.handledLastMessage(item));
 	}
 
 	/**
-	 * Adds an item to the queue after which it will be dispatched by the dispatcher {@link Thread}.j
+	 * Adds an item to the queue after which it will be dispatched by the dispatcher
+	 * {@link Thread}.j
+	 * 
 	 * @param t
 	 */
 	public void put(T t) {
@@ -61,7 +66,7 @@ public class MessageBus<T> {
 	 *            Number of messages to dispatch to this listener before discarting
 	 *            the listener. Negative value means unlimited.
 	 */
-	public void addQueueListener(MessageBusListener<T> listener, long timeout, long nrMessages) {
+	public void addQueueListener(long timeout, long nrMessages, MessageBusListener<T> listener) {
 		this.listenerConfigs.add(new ListenerConfig<>(listener, timeout, nrMessages));
 	}
 
@@ -72,7 +77,7 @@ public class MessageBus<T> {
 
 		public ListenerConfig(MessageBusListener<T> listener, long timeout, long nrMessages) {
 			this.listener = listener;
-			this.timeoutTime =  System.currentTimeMillis() + timeout;
+			this.timeoutTime = System.currentTimeMillis() + timeout;
 			this.nrMessages = nrMessages;
 		}
 
@@ -86,7 +91,10 @@ public class MessageBus<T> {
 	}
 
 	/**
-	 * Helper class to allow to inject a "poison" message in the queue to indicate the queue stream must be closed. Used for clean shutdown of dispatcher thread.
+	 * Helper class to allow to inject a "poison" message in the queue to indicate
+	 * the queue stream must be closed. Used for clean shutdown of dispatcher
+	 * thread.
+	 * 
 	 * @author glen
 	 *
 	 * @param <T>
@@ -97,8 +105,10 @@ public class MessageBus<T> {
 
 		/**
 		 * Constructor for message wrapper.
-		 * @param t The queue item to wrap.
-		 * @param poison 
+		 * 
+		 * @param t
+		 *            The queue item to wrap.
+		 * @param poison
 		 */
 		public QueueElement(T t, boolean poison) {
 			this.t = t;
@@ -116,7 +126,9 @@ public class MessageBus<T> {
 	}
 
 	/**
-	 * Creates a stream of a blocking queue and indicates end of stream once a poison message is encountered.
+	 * Creates a stream of a blocking queue and indicates end of stream once a
+	 * poison message is encountered.
+	 * 
 	 * @author glen
 	 *
 	 * @param <T>

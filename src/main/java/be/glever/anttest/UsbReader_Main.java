@@ -21,43 +21,74 @@ import javax.usb.event.UsbPipeDataEvent;
 import javax.usb.event.UsbPipeErrorEvent;
 import javax.usb.event.UsbPipeListener;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import be.glever.ant.AntUtil;
-import be.glever.ant.usb.UsbReader;
+import be.glever.ant.message.AntMessage;
+import be.glever.ant.messagebus.MessageBus;
+import be.glever.ant.usb.AntUsbMessageReader;
 import be.glever.ant.util.ByteUtils;
 
 public class UsbReader_Main {
-
-	public static void main(String[] args) throws SecurityException, UsbException, UnsupportedEncodingException, UsbDisconnectedException, InterruptedException {
+	private static final Logger LOG = LoggerFactory.getLogger(UsbReader_Main.class);
+	
+	public static void main(String[] args) throws SecurityException, UsbException, UnsupportedEncodingException,
+			UsbDisconnectedException, InterruptedException {
 		UsbDevice device = getAntDevices().iterator().next();
 		System.out.println("Device found: ");
 		System.out.println(device.getUsbDeviceDescriptor());
-		
-		UsbInterface usbInterface = (javax.usb.UsbInterface) device.getActiveUsbConfiguration().getUsbInterfaces().get(0);
+
+		UsbInterface usbInterface = (javax.usb.UsbInterface) device.getActiveUsbConfiguration().getUsbInterfaces()
+				.get(0);
 		System.out.println(usbInterface.isActive());
 		System.out.println(usbInterface.isClaimed());
 		usbInterface.claim();
 		System.out.println(usbInterface.isActive());
 		System.out.println(usbInterface.isClaimed());
-		
+
 		@SuppressWarnings("unchecked")
 		List<UsbEndpoint> usbEndpoints = usbInterface.getUsbEndpoints();
-		UsbEndpoint inEndpoint = usbEndpoints.stream().filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_IN).findAny().get();
-		UsbEndpoint outEndpoint = usbEndpoints.stream().filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_OUT).findAny().get();
+		UsbEndpoint inEndpoint = usbEndpoints.stream()
+				.filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_IN).findAny().get();
+		UsbEndpoint outEndpoint = usbEndpoints.stream()
+				.filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_OUT).findAny().get();
 
 		UsbPipe outPipe = outEndpoint.getUsbPipe();
 		UsbPipe inPipe = inEndpoint.getUsbPipe();
 
-		
-		UsbReader usbReader = new UsbReader(inPipe);
+		MessageBus<AntMessage> messageBus = new MessageBus<>();
+		messageBus.addQueueListener(-1, -1, message -> {
+			return true;
+		});
+		AntUsbMessageReader usbReader = new AntUsbMessageReader(inPipe, messageBus);
 		new Thread(usbReader).start();
-		
+
 		outPipe.open();
 		outPipe.syncSubmit(new byte[128]);
-//		outPipe.syncSubmit( new byte [] {(byte)0xa4, (byte)0x20, (byte)0xae, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x2a, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,(byte)0xa4, (byte)0x20, (byte)0xae, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x2a, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0});
-		outPipe.syncSubmit(new byte[] {(byte) 0xa4,(byte) 0x02,(byte)0x4D,(byte)0x00,(byte)0x54,(byte)0xBF});
-//		[A4][02][4D][00][54][BF]
+		// outPipe.syncSubmit( new byte [] {(byte)0xa4, (byte)0x20, (byte)0xae,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x2a, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,(byte)0xa4, (byte)0x20,
+		// (byte)0xae, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x2a, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0,
+		// (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0, (byte)0x0});
+		outPipe.syncSubmit(new byte[] { (byte) 0xa4, (byte) 0x02, (byte) 0x4D, (byte) 0x00, (byte) 0x54, (byte) 0xBF });
+		// [A4][02][4D][00][54][BF]
 		outPipe.close();
-		
+
 		Thread.sleep(10000);
 		usbReader.stop();
 	}
@@ -67,7 +98,7 @@ public class UsbReader_Main {
 		boolean sleep = false;
 		do {
 			antDevices = AntUtil.getAntDevices();
-			if(antDevices.size() == 0) {
+			if (antDevices.size() == 0) {
 				sleep = true;
 				try {
 					System.out.println("no device found, sleeping...");
@@ -75,11 +106,11 @@ public class UsbReader_Main {
 				} catch (InterruptedException ignored) {
 					// ignore
 				}
-			}else {
+			} else {
 				sleep = false;
 			}
-		}while(sleep);
-		
+		} while (sleep);
+
 		return antDevices;
 	}
 
