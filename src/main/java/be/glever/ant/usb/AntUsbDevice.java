@@ -24,6 +24,7 @@ import be.glever.ant.message.requestedresponse.CapabilitiesResponseMessage;
 import be.glever.ant.message.requestedresponse.DeviceSerialNumberMessage;
 import be.glever.ant.messagebus.MessageBus;
 import be.glever.ant.messagebus.MessageBusListener;
+import be.glever.ant.util.ByteUtils;
 
 public class AntUsbDevice implements Closeable {
 	private static Logger LOG = LoggerFactory.getLogger(AntUsbDevice.class);
@@ -39,6 +40,7 @@ public class AntUsbDevice implements Closeable {
 	private byte[] antVersion;
 	private AntUsbDeviceCapabilities capabilities;
 	private byte[] serialNumber;
+	private AntUsbMessageReader antMessageUsbReader;
 
 	/**
 	 * 
@@ -73,11 +75,11 @@ public class AntUsbDevice implements Closeable {
 
 			this.messageBus = new MessageBus<>();
 			messageBus.addQueueListener(-1, -1, msg -> {
-				LOG.debug("Received {}", msg.getClass());
+				LOG.debug("GlobalMessageListener: Received {}", msg.getClass());
 				return true;
 			});
 
-			AntUsbMessageReader antMessageUsbReader = new AntUsbMessageReader(inPipe, messageBus);
+			antMessageUsbReader = new AntUsbMessageReader(inPipe, messageBus);
 			new Thread(antMessageUsbReader).start();
 
 			Thread currentThread = Thread.currentThread();
@@ -115,10 +117,11 @@ public class AntUsbDevice implements Closeable {
 	}
 
 	private void sendRequestMessage(RequestMessage requestMessage, AntMessageHandler handler) throws AntException {
-		byte msgIdRequested = requestMessage.getMessageId();
+		byte msgIdRequested = requestMessage.getMsgIdRequested();
 
 		sendMessage(requestMessage, msg -> {
 			if (msg.getMessageId() != msgIdRequested) {
+				LOG.debug("MsgId {} does not match requested msgId {}, aborting", msg.getMessageId(), msgIdRequested);
 				return false;
 			}
 			try {
@@ -141,10 +144,15 @@ public class AntUsbDevice implements Closeable {
 	public synchronized void sendMessage(AntMessage message, MessageBusListener<AntMessage> listener)
 			throws AntException {
 		try {
+			byte[] messageBytes = message.toByteArray();
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Sending {} with bytes {}.", message.getClass(), ByteUtils.hexString(messageBytes));
+			}
+
 			if (listener != null) {
 				messageBus.addQueueListener(DEFAULT_TIMEOUT, 1, listener);
 			}
-			outPipe.syncSubmit(message.getMessageContent());
+			outPipe.syncSubmit(messageBytes);
 		} catch (Throwable t) {
 			throw new AntException(t);
 		}
@@ -157,11 +165,14 @@ public class AntUsbDevice implements Closeable {
 	@Override
 	public void close() throws IOException {
 		try {
+			this.antMessageUsbReader.stop();
 			UsbInterface activeUsbInterface = getActiveUsbInterface();
 			if (activeUsbInterface.isClaimed()) {
 				activeUsbInterface.release();
 			}
-		} catch (UsbNotActiveException | UsbDisconnectedException | UsbException e) {
+			messageBus.close();
+
+		} catch (Exception e) {
 			throw new IOException(e.getMessage(), e);
 		}
 	}

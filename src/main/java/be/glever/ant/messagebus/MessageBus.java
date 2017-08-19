@@ -1,5 +1,6 @@
 package be.glever.ant.messagebus;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Spliterator;
@@ -18,7 +19,7 @@ import org.slf4j.LoggerFactory;
  *
  * @param <T>
  */
-public class MessageBus<T> {
+public class MessageBus<T> implements Closeable {
 	private static final Logger LOG = LoggerFactory.getLogger(MessageBus.class);
 
 	private LinkedBlockingQueue<QueueElement<T>> queue;
@@ -35,18 +36,49 @@ public class MessageBus<T> {
 
 	private void notifyListeners(T item) {
 		LOG.debug("Received {}", item);
-		listenerConfigs.removeIf(
-				listenerConfig -> listenerConfig.timeoutOccurred() || listenerConfig.handledLastMessage(item));
+
+		// avoid ConcurrentModificationException caused by publisher writing to queue
+		// whilst iterating over listeners
+		List<ListenerConfig<T>> listenersCopy = new ArrayList<>(this.listenerConfigs);
+
+		// remove timedout listeners
+		List<ListenerConfig<T>> listenersToRemove = new ArrayList<>();
+		for (ListenerConfig<T> listener : listenersCopy) {
+			if (listener.timeoutOccurred()) {
+				LOG.warn("removing timed out listener: " + listener);
+				listenersToRemove.add(listener);
+			}
+		}
+		listenerConfigs.removeAll(listenersToRemove);
+		listenersToRemove.clear();
+
+		// ask remaining listeners to treat message and remove them if they should treat
+		// no more messages
+		for (ListenerConfig<T> listener : listenersCopy) {
+			if (listener.handledLastMessage(item)) {
+				LOG.debug("removing handling listener: " + listener);
+				listenersToRemove.add(listener);
+			}
+		}
+		listenerConfigs.removeAll(listenersToRemove);
 	}
 
 	/**
 	 * Adds an item to the queue after which it will be dispatched by the dispatcher
-	 * {@link Thread}.j
+	 * {@link Thread}.
 	 * 
 	 * @param t
 	 */
 	public void put(T t) {
-		this.queue.offer(new QueueElement<T>(t, false));
+		put(t, false);
+	}
+
+	private void put(T t, boolean poison) {
+		if (LOG.isDebugEnabled()) {
+				LOG.debug("put({}), poison: {}", t, poison);				
+		}
+		this.queue.offer(new QueueElement<T>(t, poison));
+
 	}
 
 	/**
@@ -77,16 +109,20 @@ public class MessageBus<T> {
 
 		public ListenerConfig(MessageBusListener<T> listener, long timeout, long nrMessages) {
 			this.listener = listener;
-			this.timeoutTime = System.currentTimeMillis() + timeout;
+			this.timeoutTime = timeout > -1 ? System.currentTimeMillis() + timeout : -1;
 			this.nrMessages = nrMessages;
 		}
 
 		public boolean timeoutOccurred() {
-			return System.currentTimeMillis() > timeoutTime;
+			return this.timeoutTime > -1 ? System.currentTimeMillis() > timeoutTime : false;
 		}
 
 		public boolean handledLastMessage(T item) {
-			return listener.handle(item) && (nrMessages > 0 && nrMessages-- == 0);
+			boolean handledMessage = listener.handle(item) && (nrMessages > 0 && --nrMessages == 0);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("listener {} handled the message {}: {}", listener, item, handledMessage);
+			}
+			return handledMessage;
 		}
 	}
 
@@ -172,6 +208,14 @@ public class MessageBus<T> {
 			return Spliterator.ORDERED;
 		}
 
+	}
+
+	/**
+	 * Shuts down the message dispatch thread.
+	 */
+	@Override
+	public void close() {
+		put(null, true);
 	}
 
 }

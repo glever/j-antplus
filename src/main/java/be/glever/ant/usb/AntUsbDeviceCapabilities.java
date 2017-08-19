@@ -23,10 +23,6 @@ public class AntUsbDeviceCapabilities {
 		return crMsg.getMessageContent();
 	}
 
-	public byte getCheckSum() {
-		return crMsg.getCheckSum();
-	}
-
 	public short getMaxChannels() {
 		return crMsg.getMaxChannels();
 	}

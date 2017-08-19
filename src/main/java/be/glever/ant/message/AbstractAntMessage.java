@@ -12,21 +12,35 @@ public abstract class AbstractAntMessage implements AntMessage {
 	@Override
 	public abstract byte getMessageId();
 
-	@Override
 	public abstract byte[] getMessageContent();
 
 	public abstract void setMessageBytes(byte[] messageContentBytes) throws AntException;
 
-	public byte getCheckSum() {
-		byte checksum = (byte) (sync ^ getMsgLength() ^ getMessageId());
-		for (byte b : getMessageContent()) {
-			checksum ^= b;
+	@Override
+	public byte[] toByteArray() {
+		byte[] bytes = new byte[8];
+		byte[] messageContent = getMessageContent();
+
+		int idx = 0;
+		bytes[idx++] = sync;
+
+		bytes[idx++] = (byte) messageContent.length;
+		bytes[idx++] = getMessageId();
+
+		for (byte bite : messageContent) {
+			bytes[idx++] = bite;
 		}
-		return checksum;
+		bytes[idx++] = getCheckSum(bytes, idx);
+
+		return bytes;
 	}
 
-	private byte getMsgLength() {
-		return (byte) getMessageContent().length;
+	private byte getCheckSum(byte[] bytes, int idx) {
+		byte checksum = bytes[0];
+		for (int i = 1; i < idx; i++) {
+			checksum ^= bytes[i];
+		}
+		return checksum;
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package be.glever.ant.message.control;
 
 import be.glever.ant.AntException;
 import be.glever.ant.message.AbstractAntMessage;
+import be.glever.ant.util.ByteArrayBuilder;
 
 public class RequestMessage extends AbstractAntMessage {
 
@@ -12,8 +13,9 @@ public class RequestMessage extends AbstractAntMessage {
 	public RequestMessage() {
 	}
 
-	public RequestMessage(byte channelNumberOrSubMessageId, byte msgIdRequested, byte addr, byte size) {
-		this.bytes = new byte[] { channelNumberOrSubMessageId, msgIdRequested, addr, size };
+	public RequestMessage(byte channelNumberOrSubMessageId, byte msgIdRequested, Byte addr, Byte size) {
+		this.bytes = new ByteArrayBuilder().write(channelNumberOrSubMessageId, msgIdRequested).writeIfNotNull(addr)
+				.writeIfNotNull(size).toByteArray();
 	}
 
 	@Override

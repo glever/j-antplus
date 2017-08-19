@@ -9,6 +9,7 @@ public class AntDeviceTest_Main {
 		AntUsbDevice device = new AntUsbDeviceFactory().getAvailableAntDevices().stream().findFirst()
 				.orElseThrow(() -> new Exception("test"));
 		device.initialize();
+		device.close();
 	}
 
 }
