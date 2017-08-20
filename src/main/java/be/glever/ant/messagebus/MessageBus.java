@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Spliterator;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.slf4j.Logger;
@@ -37,30 +38,11 @@ public class MessageBus<T> implements Closeable {
 	private void notifyListeners(T item) {
 		LOG.debug("Received {}", item);
 
-		// avoid ConcurrentModificationException caused by publisher writing to queue
-		// whilst iterating over listeners
-		List<ListenerConfig<T>> listenersCopy = new ArrayList<>(this.listenerConfigs);
-
-		// remove timedout listeners
-		List<ListenerConfig<T>> listenersToRemove = new ArrayList<>();
-		for (ListenerConfig<T> listener : listenersCopy) {
-			if (listener.timeoutOccurred()) {
-				LOG.warn("removing timed out listener: " + listener);
-				listenersToRemove.add(listener);
-			}
-		}
-		listenerConfigs.removeAll(listenersToRemove);
-		listenersToRemove.clear();
-
-		// ask remaining listeners to treat message and remove them if they should treat
-		// no more messages
-		for (ListenerConfig<T> listener : listenersCopy) {
-			if (listener.handledLastMessage(item)) {
-				LOG.debug("removing handling listener: " + listener);
-				listenersToRemove.add(listener);
-			}
-		}
-		listenerConfigs.removeAll(listenersToRemove);
+		// remove listeners where timeout occurred or if they treated this message and
+		// it was their last one
+	listenerConfigs.removeAll(new ArrayList<>(this.listenerConfigs).stream()
+				.filter(listener -> listener.timeoutOccurred() || listener.handledLastMessage(item))
+				.collect(Collectors.toList()));
 	}
 
 	/**
@@ -75,7 +57,7 @@ public class MessageBus<T> implements Closeable {
 
 	private void put(T t, boolean poison) {
 		if (LOG.isDebugEnabled()) {
-				LOG.debug("put({}), poison: {}", t, poison);				
+			LOG.debug("put({}), poison: {}", t, poison);
 		}
 		this.queue.offer(new QueueElement<T>(t, poison));
 
