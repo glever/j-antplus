@@ -51,13 +51,16 @@ public class AntUsbDevice implements Closeable {
 		this.device = device;
 	}
 
+
+
 	public void initialize() throws AntException {
-		UsbInterface usbInterface = getActiveUsbInterface();
-		if (usbInterface.isClaimed()) {
-			throw new AntException("Usb device already claimed");
-		}
 
 		try {
+			UsbInterface usbInterface = getActiveUsbInterface();
+			if (usbInterface.isClaimed()) {
+				throw new AntException("Usb device already claimed");
+			}
+			
 			usbInterface.claim();
 
 			@SuppressWarnings("unchecked")
@@ -110,7 +113,7 @@ public class AntUsbDevice implements Closeable {
 				throw new AntException("Could not initialize");
 			}
 
-		} catch (UsbNotActiveException | UsbDisconnectedException | UsbException e) {
+		} catch (Exception e) {
 			throw new AntException(e);
 		}
 

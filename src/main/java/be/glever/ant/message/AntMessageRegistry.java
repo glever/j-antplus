@@ -75,17 +75,20 @@ public class AntMessageRegistry {
 	 * @return
 	 */
 	public static AntMessage from(byte[] bytes) throws AntException {
-		byte msgLength = (byte) (bytes[1] + 4);// sync, msglen, msgid and checksum excluded 
+		byte msgLength = (byte) (bytes[1] + 4);// sync, msglen, msgid and checksum excluded
 		byte msgId = bytes[2];
-		bytes = Arrays.copyOf(bytes, msgLength ); 
+		bytes = Arrays.copyOf(bytes, msgLength);
 
 		Class<? extends AbstractAntMessage> msgImpl = registry.get(msgId);
+		AntMessage messageInstance = null;
 		if (msgImpl == null) {
 			LOG.error("Could not convert {} to an AntMessage. Bytes received were {}", msgId,
 					ByteUtils.hexString(bytes));
+			messageInstance = new UnknownMessage(bytes);
+		} else {
+			messageInstance = instantiate(msgImpl);
+			messageInstance.parse(bytes);
 		}
-		AntMessage messageInstance = instantiate(msgImpl);
-		messageInstance.parse(bytes);
 
 		LOG.debug("Converted {} to {}", ByteUtils.hexString(bytes), messageInstance.getClass());
 		return messageInstance;
@@ -109,6 +112,43 @@ public class AntMessageRegistry {
 			throw new IllegalStateException("Initialization Error. Could not call default constructor on class ["
 					+ msgImplClass.getName() + "]");
 		}
+	}
+
+	/**
+	 * Gets thrown by AntMessageRegistry whenever it cannot find a matching message
+	 * for a certain bytearray.
+	 * 
+	 * @author glen
+	 *
+	 */
+	public static class UnknownMessage extends AbstractAntMessage implements AntMessage {
+
+		private byte[] bytes;
+
+		private UnknownMessage(byte[] fullByteArray) {
+			this.bytes = fullByteArray;
+		}
+
+		@Override
+		public byte getMessageId() {
+			return bytes[2];
+		}
+
+		@Override
+		public byte[] getMessageContent() {
+			return Arrays.copyOfRange(bytes, 4, 4 + bytes[1]);
+		}
+
+		@Override
+		public void setMessageBytes(byte[] messageContentBytes) throws AntException {
+			throw new UnsupportedOperationException("Unsupported, only constructor should be used");
+		}
+
+		@Override
+		public String toString() {
+			return "UnknownMessage [msgId=" + getMessageId() + ", bytes=" + ByteUtils.hexString(bytes) + "]";
+		}
+
 	}
 
 }

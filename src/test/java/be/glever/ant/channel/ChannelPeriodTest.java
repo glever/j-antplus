@@ -9,13 +9,13 @@ public class ChannelPeriodTest {
 
 	@Test
 	public void defaultChannelPeriodShouldBe8192() {
-		byte[] value = new ChannelPeriod().getValue();
+		byte[] value = new AntChannelPeriod().getValue();
 		Assert.assertEquals(DEFAULT_PERIOD, value[1] << 8 | value[0]);
 	}
 	
 	@Test 
 	public void defaultChannelPeriodShouldBe4Hz() {
-		byte[] value = new ChannelPeriod(4).getValue();
+		byte[] value = new AntChannelPeriod(4).getValue();
 		Assert.assertEquals(DEFAULT_PERIOD, value[1] << 8 | value[0]);
 	}
 }
