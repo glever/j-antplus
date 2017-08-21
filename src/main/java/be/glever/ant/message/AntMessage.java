@@ -6,8 +6,8 @@ public interface AntMessage {
 
 	byte getMessageId();
 
-	byte[] getMessageContent();
-
 	void parse(byte[] bytes) throws AntException;
+
+	byte[] toByteArray();
 
 }

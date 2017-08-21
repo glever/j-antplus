@@ -1,22 +1,26 @@
 package be.glever.ant.messagebus;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Small messagebus implementation using a blocking queue. Messages are dispatched by a single dedicated thread meaning listeners run sequentially. 
+ * Small messagebus implementation using a blocking queue. Messages are
+ * dispatched by a single dedicated thread meaning listeners run sequentially.
+ * 
  * @author glen
  *
  * @param <T>
  */
-public class MessageBus<T> {
+public class MessageBus<T> implements Closeable {
 	private static final Logger LOG = LoggerFactory.getLogger(MessageBus.class);
 
 	private LinkedBlockingQueue<QueueElement<T>> queue;
@@ -32,16 +36,31 @@ public class MessageBus<T> {
 	}
 
 	private void notifyListeners(T item) {
-		listenerConfigs.removeIf(
-				listenerConfig -> listenerConfig.timeoutOccurred() || listenerConfig.handledLastMessage(item));
+		LOG.debug("Received {}", item);
+
+		// remove listeners where timeout occurred or if they treated this message and
+		// it was their last one
+	listenerConfigs.removeAll(new ArrayList<>(this.listenerConfigs).stream()
+				.filter(listener -> listener.timeoutOccurred() || listener.handledLastMessage(item))
+				.collect(Collectors.toList()));
 	}
 
 	/**
-	 * Adds an item to the queue after which it will be dispatched by the dispatcher {@link Thread}.j
+	 * Adds an item to the queue after which it will be dispatched by the dispatcher
+	 * {@link Thread}.
+	 * 
 	 * @param t
 	 */
 	public void put(T t) {
-		this.queue.offer(new QueueElement<T>(t, false));
+		put(t, false);
+	}
+
+	private void put(T t, boolean poison) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("put({}), poison: {}", t, poison);
+		}
+		this.queue.offer(new QueueElement<T>(t, poison));
+
 	}
 
 	/**
@@ -61,7 +80,7 @@ public class MessageBus<T> {
 	 *            Number of messages to dispatch to this listener before discarting
 	 *            the listener. Negative value means unlimited.
 	 */
-	public void addQueueListener(MessageBusListener<T> listener, long timeout, long nrMessages) {
+	public void addQueueListener(long timeout, long nrMessages, MessageBusListener<T> listener) {
 		this.listenerConfigs.add(new ListenerConfig<>(listener, timeout, nrMessages));
 	}
 
@@ -72,21 +91,28 @@ public class MessageBus<T> {
 
 		public ListenerConfig(MessageBusListener<T> listener, long timeout, long nrMessages) {
 			this.listener = listener;
-			this.timeoutTime =  System.currentTimeMillis() + timeout;
+			this.timeoutTime = timeout > -1 ? System.currentTimeMillis() + timeout : -1;
 			this.nrMessages = nrMessages;
 		}
 
 		public boolean timeoutOccurred() {
-			return System.currentTimeMillis() > timeoutTime;
+			return this.timeoutTime > -1 ? System.currentTimeMillis() > timeoutTime : false;
 		}
 
 		public boolean handledLastMessage(T item) {
-			return listener.handle(item) && (nrMessages > 0 && nrMessages-- == 0);
+			boolean handledMessage = listener.handle(item) && (nrMessages > 0 && --nrMessages == 0);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("listener {} handled the message {}: {}", listener, item, handledMessage);
+			}
+			return handledMessage;
 		}
 	}
 
 	/**
-	 * Helper class to allow to inject a "poison" message in the queue to indicate the queue stream must be closed. Used for clean shutdown of dispatcher thread.
+	 * Helper class to allow to inject a "poison" message in the queue to indicate
+	 * the queue stream must be closed. Used for clean shutdown of dispatcher
+	 * thread.
+	 * 
 	 * @author glen
 	 *
 	 * @param <T>
@@ -97,8 +123,10 @@ public class MessageBus<T> {
 
 		/**
 		 * Constructor for message wrapper.
-		 * @param t The queue item to wrap.
-		 * @param poison 
+		 * 
+		 * @param t
+		 *            The queue item to wrap.
+		 * @param poison
 		 */
 		public QueueElement(T t, boolean poison) {
 			this.t = t;
@@ -116,7 +144,9 @@ public class MessageBus<T> {
 	}
 
 	/**
-	 * Creates a stream of a blocking queue and indicates end of stream once a poison message is encountered.
+	 * Creates a stream of a blocking queue and indicates end of stream once a
+	 * poison message is encountered.
+	 * 
 	 * @author glen
 	 *
 	 * @param <T>
@@ -160,6 +190,14 @@ public class MessageBus<T> {
 			return Spliterator.ORDERED;
 		}
 
+	}
+
+	/**
+	 * Shuts down the message dispatch thread.
+	 */
+	@Override
+	public void close() {
+		put(null, true);
 	}
 
 }

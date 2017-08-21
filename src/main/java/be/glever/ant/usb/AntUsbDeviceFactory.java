@@ -10,11 +10,11 @@ import javax.usb.UsbHub;
 
 import be.glever.ant.AntException;
 
-public class AntDeviceFactory {
+public class AntUsbDeviceFactory {
 	private static final int PRODUCT_DYNASTREAM_M_USB = 0x1009;
 	private static final int VENDOR_DYNASTREAM = 0x0fcf;
 
-	public List<AntDevice> getAvailableAntDevices() throws AntException {
+	public static List<AntUsbDevice> getAvailableAntDevices() throws AntException {
 		try {
 			UsbHub rootUsbHub = UsbHostManager.getUsbServices().getRootUsbHub();
 
@@ -24,7 +24,7 @@ public class AntDeviceFactory {
 			return attachedUsbDevices.stream()
 					.filter(device -> device.getUsbDeviceDescriptor().idVendor() == VENDOR_DYNASTREAM
 							&& device.getUsbDeviceDescriptor().idProduct() == PRODUCT_DYNASTREAM_M_USB)
-					.map(device -> new AntDevice(device)).collect(Collectors.toList());
+					.map(device -> new AntUsbDevice(device)).collect(Collectors.toList());
 		} catch (SecurityException | UsbException e) {
 			throw new AntException(e);
 		}

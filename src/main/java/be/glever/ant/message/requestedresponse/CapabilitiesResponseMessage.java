@@ -12,6 +12,9 @@ public class CapabilitiesResponseMessage extends AbstractAntMessage {
 	public static final byte MSG_ID = 0x54;
 	private byte[] messageBytes;
 
+	public CapabilitiesResponseMessage() {
+	}
+
 	@Override
 	public byte getMessageId() {
 		return MSG_ID;

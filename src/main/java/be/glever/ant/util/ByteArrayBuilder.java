@@ -2,6 +2,8 @@ package be.glever.ant.util;
 
 import java.io.ByteArrayOutputStream;
 
+import be.glever.ant.message.AbstractAntMessage;
+
 public class ByteArrayBuilder {
 
 	private ByteArrayOutputStream baos;
@@ -19,6 +21,13 @@ public class ByteArrayBuilder {
 	
 	public byte[] toByteArray() {
 		return baos.toByteArray();
+	}
+
+	public ByteArrayBuilder writeIfNotNull(Byte addr) {
+		if(addr != null) {
+			baos.write(addr);
+		}
+		return this;
 	}
 	
 }

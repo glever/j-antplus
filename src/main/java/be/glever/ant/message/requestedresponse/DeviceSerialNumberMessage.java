@@ -5,11 +5,15 @@ import be.glever.ant.message.AbstractAntMessage;
 
 public class DeviceSerialNumberMessage extends AbstractAntMessage {
 
+	public static final byte MSG_ID = 0x61;
 	private byte[] bytes;
+
+	public DeviceSerialNumberMessage() {
+	}
 
 	@Override
 	public byte getMessageId() {
-		return 0x61;
+		return MSG_ID;
 	}
 
 	@Override

@@ -5,6 +5,9 @@ import be.glever.ant.message.AbstractAntMessage;
 
 public class ResetSystemMessage extends AbstractAntMessage {
 
+	public ResetSystemMessage() {
+	}
+
 	@Override
 	public byte getMessageId() {
 		return 0x4a;
@@ -12,7 +15,7 @@ public class ResetSystemMessage extends AbstractAntMessage {
 
 	@Override
 	public byte[] getMessageContent() {
-		return new byte[] {0};
+		return new byte[] { 0 };
 	}
 
 	@Override

@@ -7,12 +7,16 @@ public class OpenChannelMessage extends AbstractAntMessage {
 
 	private byte[] bytes;
 
-	public OpenChannelMessage(byte channelNr) {
-		this.bytes = new byte[] {channelNr};
+	public OpenChannelMessage() {
 	}
+
+	public OpenChannelMessage(byte channelNr) {
+		this.bytes = new byte[] { channelNr };
+	}
+
 	@Override
 	public byte getMessageId() {
-			return 0x4b;
+		return 0x4b;
 	}
 
 	@Override
