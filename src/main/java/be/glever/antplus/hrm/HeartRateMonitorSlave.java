@@ -30,7 +30,7 @@ public class HeartRateMonitorSlave {
 		
 		
 		
-		return channel;
+		return null;
 	}
 	
 }
