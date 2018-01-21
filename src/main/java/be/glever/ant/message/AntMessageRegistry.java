@@ -29,9 +29,6 @@ import be.glever.ant.util.ByteUtils;
 
 /**
  * Container and factory for all known antmessages.
- * 
- * @author glen
- *
  */
 public class AntMessageRegistry {
 	private static final Logger LOG = LoggerFactory.getLogger(AntMessageRegistry.class);
@@ -79,14 +76,14 @@ public class AntMessageRegistry {
 		byte msgId = bytes[2];
 		bytes = Arrays.copyOf(bytes, msgLength);
 
-		Class<? extends AbstractAntMessage> msgImpl = registry.get(msgId);
+		Class<? extends AbstractAntMessage> messageClass = registry.get(msgId);
 		AntMessage messageInstance = null;
-		if (msgImpl == null) {
+		if (messageClass == null) {
 			LOG.error("Could not convert {} to an AntMessage. Bytes received were {}", msgId,
 					ByteUtils.hexString(bytes));
 			messageInstance = new UnknownMessage(bytes);
 		} else {
-			messageInstance = instantiate(msgImpl);
+			messageInstance = instantiate(messageClass);
 			messageInstance.parse(bytes);
 		}
 
@@ -114,13 +111,6 @@ public class AntMessageRegistry {
 		}
 	}
 
-	/**
-	 * Gets thrown by AntMessageRegistry whenever it cannot find a matching message
-	 * for a certain bytearray.
-	 * 
-	 * @author glen
-	 *
-	 */
 	public static class UnknownMessage extends AbstractAntMessage implements AntMessage {
 
 		private byte[] bytes;

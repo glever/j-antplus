@@ -14,6 +14,11 @@ public class AntUsbDeviceFactory {
 	private static final int PRODUCT_DYNASTREAM_M_USB = 0x1009;
 	private static final int VENDOR_DYNASTREAM = 0x0fcf;
 
+	/**
+	 * Returns a list of <b>uninitialized</b> {@link AntUsbDevice}s that are found on the system.
+	 * @return
+	 * @throws AntException
+	 */
 	public static List<AntUsbDevice> getAvailableAntDevices() throws AntException {
 		try {
 			UsbHub rootUsbHub = UsbHostManager.getUsbServices().getRootUsbHub();

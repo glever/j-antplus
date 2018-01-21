@@ -11,7 +11,7 @@ public class MessageRegistryTest {
 
 	@Test
 	public void containsCapabilitiesResponseMessage() throws AntException {
-		AntMessage message = new AntMessageRegistry().from(CapabilitiesResponseMessageTest.M_USB_CAPABILITIES);
+		AntMessage message = AntMessageRegistry.from(CapabilitiesResponseMessageTest.M_USB_CAPABILITIES);
 		Assert.assertTrue(message instanceof CapabilitiesResponseMessage);
 	}
 }

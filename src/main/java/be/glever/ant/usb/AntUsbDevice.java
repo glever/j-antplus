@@ -1,21 +1,5 @@
 package be.glever.ant.usb;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.List;
-
-import javax.usb.UsbConst;
-import javax.usb.UsbDevice;
-import javax.usb.UsbDisconnectedException;
-import javax.usb.UsbEndpoint;
-import javax.usb.UsbException;
-import javax.usb.UsbInterface;
-import javax.usb.UsbNotActiveException;
-import javax.usb.UsbPipe;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import be.glever.ant.AntException;
 import be.glever.ant.message.AntMessage;
 import be.glever.ant.message.control.RequestMessage;
@@ -25,6 +9,14 @@ import be.glever.ant.message.requestedresponse.DeviceSerialNumberMessage;
 import be.glever.ant.messagebus.MessageBus;
 import be.glever.ant.messagebus.MessageBusListener;
 import be.glever.ant.util.ByteUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.usb.*;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class AntUsbDevice implements Closeable {
 	private static Logger LOG = LoggerFactory.getLogger(AntUsbDevice.class);
@@ -43,7 +35,7 @@ public class AntUsbDevice implements Closeable {
 	private AntUsbMessageReader antMessageUsbReader;
 
 	/**
-	 * 
+	 *
 	 * @param device
 	 */
 	public AntUsbDevice(UsbDevice device) {
@@ -52,7 +44,10 @@ public class AntUsbDevice implements Closeable {
 	}
 
 
-
+	/**
+	 *
+	 * @throws AntException
+	 */
 	public void initialize() throws AntException {
 
 		try {
@@ -60,7 +55,7 @@ public class AntUsbDevice implements Closeable {
 			if (usbInterface.isClaimed()) {
 				throw new AntException("Usb device already claimed");
 			}
-			
+
 			usbInterface.claim();
 
 			@SuppressWarnings("unchecked")
@@ -85,33 +80,14 @@ public class AntUsbDevice implements Closeable {
 			antMessageUsbReader = new AntUsbMessageReader(inPipe, messageBus);
 			new Thread(antMessageUsbReader).start();
 
-			Thread currentThread = Thread.currentThread();
-			sendRequestMessage(createRequestMessage(CapabilitiesResponseMessage.MSG_ID), capabilitiesResponse -> {
-				this.capabilities = new AntUsbDeviceCapabilities((CapabilitiesResponseMessage) capabilitiesResponse);
+			CompletableFuture<AntMessage> capabilitiesFuture = sendRequestMessage(createRequestMessage(CapabilitiesResponseMessage.MSG_ID));
+			this.capabilities = new AntUsbDeviceCapabilities((CapabilitiesResponseMessage) capabilitiesFuture.get());
 
-				try {
-					sendRequestMessage(createRequestMessage(AntVersionMessage.MSG_ID), versionResponse -> {
-						this.antVersion = ((AntVersionMessage) versionResponse).getAntVersion();
+			CompletableFuture<AntMessage> antVersionFuture = sendRequestMessage(createRequestMessage(AntVersionMessage.MSG_ID));
+			this.antVersion = ((AntVersionMessage) antVersionFuture.get()).getAntVersion();
 
-						sendRequestMessage(createRequestMessage(DeviceSerialNumberMessage.MSG_ID), serialNrResp -> {
-							this.serialNumber = ((DeviceSerialNumberMessage) serialNrResp).getSerialNumber();
-							initialized = true;
-							currentThread.interrupt();
-						});
-					});
-				} catch (Throwable t) {
-					currentThread.interrupt();
-				}
-			});
-
-			try {
-				Thread.sleep(Long.MAX_VALUE);
-			} catch (InterruptedException e) {
-				Thread.interrupted();
-			}
-			if (!initialized) {
-				throw new AntException("Could not initialize");
-			}
+			CompletableFuture<AntMessage> deviceSerialNumberFuture = sendRequestMessage(createRequestMessage(DeviceSerialNumberMessage.MSG_ID));
+			this.serialNumber = ((DeviceSerialNumberMessage) deviceSerialNumberFuture.get()).getSerialNumber();
 
 		} catch (Exception e) {
 			throw new AntException(e);
@@ -119,25 +95,21 @@ public class AntUsbDevice implements Closeable {
 
 	}
 
-	private void sendRequestMessage(RequestMessage requestMessage, AntMessageHandler handler) throws AntException {
+	private CompletableFuture<AntMessage> sendRequestMessage(RequestMessage requestMessage) throws AntException {
 		byte msgIdRequested = requestMessage.getMsgIdRequested();
+
+		CompletableFuture<AntMessage> future = new CompletableFuture<>();
 
 		sendMessage(requestMessage, msg -> {
 			if (msg.getMessageId() != msgIdRequested) {
-				LOG.debug("MsgId {} does not match requested msgId {}, aborting", msg.getMessageId(), msgIdRequested);
-				return false;
+				LOG.debug("MsgId {} does not match requested msgId {}, skipping", msg.getMessageId(), ByteUtils.hexString(msgIdRequested));
+				return true;
 			}
-			try {
-				handler.handle(msg);
-			} catch (AntException e) {
-				throw new RuntimeException(e);
-			}
-			return true;
+			future.complete(msg);
+			return false;
 		});
-	}
 
-	private static interface AntMessageHandler {
-		void handle(AntMessage msg) throws AntException;
+		return future;
 	}
 
 	private RequestMessage createRequestMessage(byte requestedMsgId) {

@@ -1,5 +1,8 @@
 package be.glever.ant.messagebus;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,13 +12,10 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Small messagebus implementation using a blocking queue. Messages are
  * dispatched by a single dedicated thread meaning listeners run sequentially.
- * 
+ *
  * @author glen
  *
  * @param <T>
@@ -28,27 +28,22 @@ public class MessageBus<T> implements Closeable {
 
 	public MessageBus() {
 		queue = new LinkedBlockingQueue<>(1000);
-		new Thread(() -> {
-			StreamSupport.stream(new MySpliterator<>(queue), false).forEach(item -> {
-				notifyListeners(item);
-			});
-		}).start();
+		new Thread(() -> StreamSupport.stream(new MySpliterator<>(queue), false).forEach(this::notifyListeners)).start();
 	}
 
 	private void notifyListeners(T item) {
 		LOG.debug("Received {}", item);
 
-		// remove listeners where timeout occurred or if they treated this message and
-		// it was their last one
-	listenerConfigs.removeAll(new ArrayList<>(this.listenerConfigs).stream()
-				.filter(listener -> listener.timeoutOccurred() || listener.handledLastMessage(item))
+		// removes listeners that are in timeout + sends message to other listeners and removes listeners which no longer want to process new messages
+		listenerConfigs.removeAll(new ArrayList<>(this.listenerConfigs).stream()
+				.filter(listener -> listener.timeoutOccurred() || listener.handledLastMessage(item))  // ... all in 1 hard to read line ...
 				.collect(Collectors.toList()));
 	}
 
 	/**
 	 * Adds an item to the queue after which it will be dispatched by the dispatcher
 	 * {@link Thread}.
-	 * 
+	 *
 	 * @param t
 	 */
 	public void put(T t) {
@@ -59,7 +54,7 @@ public class MessageBus<T> implements Closeable {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("put({}), poison: {}", t, poison);
 		}
-		this.queue.offer(new QueueElement<T>(t, poison));
+		this.queue.offer(new QueueElement<>(t, poison));
 
 	}
 
@@ -71,7 +66,7 @@ public class MessageBus<T> implements Closeable {
 	 * <li>after treating a message and nrMessages have been treated (before timeout
 	 * has occurred)</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param listener
 	 *            The listener to notify of events.
 	 * @param timeout
@@ -112,7 +107,7 @@ public class MessageBus<T> implements Closeable {
 	 * Helper class to allow to inject a "poison" message in the queue to indicate
 	 * the queue stream must be closed. Used for clean shutdown of dispatcher
 	 * thread.
-	 * 
+	 *
 	 * @author glen
 	 *
 	 * @param <T>
@@ -123,7 +118,7 @@ public class MessageBus<T> implements Closeable {
 
 		/**
 		 * Constructor for message wrapper.
-		 * 
+		 *
 		 * @param t
 		 *            The queue item to wrap.
 		 * @param poison
@@ -146,7 +141,7 @@ public class MessageBus<T> implements Closeable {
 	/**
 	 * Creates a stream of a blocking queue and indicates end of stream once a
 	 * poison message is encountered.
-	 * 
+	 *
 	 * @author glen
 	 *
 	 * @param <T>

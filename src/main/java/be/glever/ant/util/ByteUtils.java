@@ -27,4 +27,8 @@ public class ByteUtils {
 	public static boolean hasBitSet(int value, int bitPos) {
 		return hasMask(value, 1 << bitPos);
 	}
+
+	public static String hexString(byte bite) {
+		return hexString(new byte[]{bite});
+	}
 }

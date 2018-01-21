@@ -9,9 +9,6 @@ public abstract class AbstractAntMessage implements AntMessage {
 
 	private byte sync = (byte) 0xa4; // TODO synchronous mode (0xa5 used for WRITE mode) is currently unsupported
 
-	@Override
-	public abstract byte getMessageId();
-
 	public abstract byte[] getMessageContent();
 
 	public abstract void setMessageBytes(byte[] messageContentBytes) throws AntException;

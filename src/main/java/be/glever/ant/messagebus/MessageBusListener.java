@@ -9,6 +9,6 @@ public interface MessageBusListener<T> {
 	 * @return true if listener is interested in treating any more messages. False
 	 *         if otherwise.
 	 */
-	public boolean handle(T t);
+	boolean handle(T t);
 
 }
