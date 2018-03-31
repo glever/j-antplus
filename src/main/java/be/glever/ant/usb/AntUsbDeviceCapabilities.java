@@ -142,7 +142,11 @@ public class AntUsbDeviceCapabilities {
 	public boolean getRfActiveNotificationEnabled() {
 		return crMsg.getRfActiveNotificationEnabled();
 	}
-	
-	
 
+	@Override
+	public String toString() {
+		return "AntUsbDeviceCapabilities{" +
+				"crMsg=" + crMsg +
+				'}';
+	}
 }

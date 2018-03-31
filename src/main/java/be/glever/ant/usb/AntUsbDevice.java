@@ -18,6 +18,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Provides abstraction of and interaction with an ANT USB dongle.
+ * Clients can
+ */
 public class AntUsbDevice implements Closeable {
 	private static Logger LOG = LoggerFactory.getLogger(AntUsbDevice.class);
 	private static final long DEFAULT_TIMEOUT = 1000;
@@ -35,7 +39,7 @@ public class AntUsbDevice implements Closeable {
 	private AntUsbMessageReader antMessageUsbReader;
 
 	/**
-	 *
+	 * Constructor. Note that clients should still call the {@link #initialize()} method.
 	 * @param device
 	 */
 	public AntUsbDevice(UsbDevice device) {
@@ -45,7 +49,7 @@ public class AntUsbDevice implements Closeable {
 
 
 	/**
-	 *
+	 * Opens a connection to the ant usb device and reads the basic info.
 	 * @throws AntException
 	 */
 	public void initialize() throws AntException {
@@ -72,10 +76,7 @@ public class AntUsbDevice implements Closeable {
 			inPipe.open();
 
 			this.messageBus = new MessageBus<>();
-			messageBus.addQueueListener(-1, -1, msg -> {
-				LOG.debug("GlobalMessageListener: Received {}", msg.getClass());
-				return true;
-			});
+			messageBus.addQueueListener(-1, -1, new GlobalMessageBusListener());
 
 			antMessageUsbReader = new AntUsbMessageReader(inPipe, messageBus);
 			new Thread(antMessageUsbReader).start();
@@ -88,6 +89,10 @@ public class AntUsbDevice implements Closeable {
 
 			CompletableFuture<AntMessage> deviceSerialNumberFuture = sendRequestMessage(createRequestMessage(DeviceSerialNumberMessage.MSG_ID));
 			this.serialNumber = ((DeviceSerialNumberMessage) deviceSerialNumberFuture.get()).getSerialNumber();
+
+			LOG.debug("Capabilities: {}", this.capabilities.toString());
+			LOG.debug("Ant Version: {}", ByteUtils.hexString(this.antVersion));
+			LOG.debug("SerialNumber: {}", ByteUtils.hexString(this.serialNumber));
 
 		} catch (Exception e) {
 			throw new AntException(e);
@@ -149,6 +154,15 @@ public class AntUsbDevice implements Closeable {
 
 		} catch (Exception e) {
 			throw new IOException(e.getMessage(), e);
+		}
+	}
+
+	private static class GlobalMessageBusListener implements MessageBusListener<AntMessage> {
+
+		@Override
+		public boolean handle(AntMessage antMessage) {
+			LOG.debug("GlobalMessageListener: Received {}", antMessage.getClass());
+			return true;
 		}
 	}
 

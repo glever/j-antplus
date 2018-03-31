@@ -1,5 +1,7 @@
 package be.glever.ant.util;
 
+import java.nio.ByteBuffer;
+
 public class ByteUtils {
 
 	public static String binaryString(byte[] bytes) {
@@ -30,5 +32,18 @@ public class ByteUtils {
 
 	public static String hexString(byte bite) {
 		return hexString(new byte[]{bite});
+	}
+
+	public static int toInt(byte... byteArray){
+		if(byteArray.length > 4){
+			throw new IllegalArgumentException("ByteArray too large to convert to int. Length was: " + byteArray.length);
+		}
+
+		int val  = 0;
+		for(byte b: byteArray){
+			val = val << 8;
+			val |= b;
+		}
+		return val;
 	}
 }

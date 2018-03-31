@@ -23,7 +23,7 @@ public class DeviceSerialNumberMessage extends AbstractAntMessage {
 
 	@Override
 	public void setMessageBytes(byte[] messageContentBytes) throws AntException {
-		this.bytes = bytes;
+		this.bytes = messageContentBytes;
 	}
 
 	public DeviceSerialNumberMessage(byte[] serialNumber) {
