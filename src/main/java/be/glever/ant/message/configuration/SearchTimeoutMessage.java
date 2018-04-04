@@ -2,9 +2,10 @@ package be.glever.ant.message.configuration;
 
 import be.glever.ant.AntException;
 import be.glever.ant.message.AbstractAntMessage;
+import be.glever.ant.message.AntBlockingMessage;
 import be.glever.ant.util.ByteArrayBuilder;
 
-public class SearchTimeoutMessage extends AbstractAntMessage {
+public class SearchTimeoutMessage extends AbstractAntMessage  implements AntBlockingMessage {
 
 	private byte channelNumber;
 	private byte searchTimeout;

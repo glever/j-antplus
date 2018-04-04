@@ -3,7 +3,7 @@ package be.glever.ant.message.control;
 import be.glever.ant.AntException;
 import be.glever.ant.message.AbstractAntMessage;
 
-public class ResetSystemMessage extends AbstractAntMessage {
+public class ResetSystemMessage extends AbstractAntMessage  {
 
 	public ResetSystemMessage() {
 	}

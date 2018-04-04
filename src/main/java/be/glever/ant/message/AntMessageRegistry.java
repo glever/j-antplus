@@ -1,7 +1,7 @@
 package be.glever.ant.message;
 
 import be.glever.ant.AntException;
-import be.glever.ant.message.channeleventresponse.ChannelEventResponse;
+import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
 import be.glever.ant.message.configuration.*;
 import be.glever.ant.message.control.*;
 import be.glever.ant.message.notification.SerialErrorMessage;
@@ -47,11 +47,11 @@ public class AntMessageRegistry {
 		add(AntVersionMessage.class);
 		add(ChannelIdMessage.class);
 		add(ChannelStatusMessage.class);
-		add(DeviceSerialNumberMessage.class);
+		add(SerialNumberMessage.class);
 		add(CapabilitiesResponseMessage.class);
 
 		// Channel events
-		add(ChannelEventResponse.class);
+		add(ChannelEventOrResponseMessage.class);
 	}
 
 	/**

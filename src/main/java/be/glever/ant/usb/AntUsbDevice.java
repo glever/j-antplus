@@ -5,7 +5,7 @@ import be.glever.ant.message.AntMessage;
 import be.glever.ant.message.control.RequestMessage;
 import be.glever.ant.message.requestedresponse.AntVersionMessage;
 import be.glever.ant.message.requestedresponse.CapabilitiesResponseMessage;
-import be.glever.ant.message.requestedresponse.DeviceSerialNumberMessage;
+import be.glever.ant.message.requestedresponse.SerialNumberMessage;
 import be.glever.ant.messagebus.MessageBus;
 import be.glever.ant.messagebus.MessageBusListener;
 import be.glever.ant.util.ByteUtils;
@@ -87,8 +87,8 @@ public class AntUsbDevice implements Closeable {
 			CompletableFuture<AntMessage> antVersionFuture = sendMessage(createRequestMessage(AntVersionMessage.MSG_ID));
 			this.antVersion = ((AntVersionMessage) antVersionFuture.get()).getAntVersion();
 
-			CompletableFuture<AntMessage> deviceSerialNumberFuture = sendMessage(createRequestMessage(DeviceSerialNumberMessage.MSG_ID));
-			this.serialNumber = ((DeviceSerialNumberMessage) deviceSerialNumberFuture.get()).getSerialNumber();
+			CompletableFuture<AntMessage> deviceSerialNumberFuture = sendMessage(createRequestMessage(SerialNumberMessage.MSG_ID));
+			this.serialNumber = ((SerialNumberMessage) deviceSerialNumberFuture.get()).getSerialNumber();
 
 			LOG.debug("Capabilities: {}", this.capabilities.toString());
 			LOG.debug("Ant Version: {}", ByteUtils.hexString(this.antVersion));

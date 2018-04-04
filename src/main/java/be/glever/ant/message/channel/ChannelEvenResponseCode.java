@@ -1,4 +1,4 @@
-package be.glever.ant.message.channeleventresponse;
+package be.glever.ant.message.channel;
 
 public enum ChannelEvenResponseCode {
 	RESPONSE_NO_ERROR((byte) 0x00),

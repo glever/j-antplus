@@ -2,9 +2,10 @@ package be.glever.ant.message.control;
 
 import be.glever.ant.AntException;
 import be.glever.ant.message.AbstractAntMessage;
+import be.glever.ant.message.AntBlockingMessage;
 import be.glever.ant.util.ByteArrayBuilder;
 
-public class RequestMessage extends AbstractAntMessage {
+public class RequestMessage extends AbstractAntMessage  implements AntBlockingMessage {
 
 	public static final byte MSG_ID = 0x4d;
 

@@ -2,8 +2,9 @@ package be.glever.ant.message.control;
 
 import be.glever.ant.AntException;
 import be.glever.ant.message.AbstractAntMessage;
+import be.glever.ant.message.AntBlockingMessage;
 
-public class CloseChannelMessage extends AbstractAntMessage {
+public class CloseChannelMessage extends AbstractAntMessage  implements AntBlockingMessage {
 
 	private byte[] bytes;
 
