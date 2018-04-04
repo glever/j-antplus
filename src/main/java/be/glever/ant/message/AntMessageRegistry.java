@@ -1,31 +1,19 @@
 package be.glever.ant.message;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
+import be.glever.ant.AntException;
+import be.glever.ant.message.channeleventresponse.ChannelEventResponse;
+import be.glever.ant.message.configuration.*;
+import be.glever.ant.message.control.*;
+import be.glever.ant.message.notification.SerialErrorMessage;
+import be.glever.ant.message.notification.StartupNotificationMessage;
+import be.glever.ant.message.requestedresponse.*;
+import be.glever.ant.util.ByteUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import be.glever.ant.AntException;
-import be.glever.ant.message.configuration.AssignChannelMessage;
-import be.glever.ant.message.configuration.ChannelPeriodMessage;
-import be.glever.ant.message.configuration.ChannelRfFrequencyMessage;
-import be.glever.ant.message.configuration.SearchTimeoutMessage;
-import be.glever.ant.message.configuration.UnassignChannelMessage;
-import be.glever.ant.message.control.CloseChannelMessage;
-import be.glever.ant.message.control.OpenChannelMessage;
-import be.glever.ant.message.control.OpenRxScanModeMessage;
-import be.glever.ant.message.control.RequestMessage;
-import be.glever.ant.message.control.ResetSystemMessage;
-import be.glever.ant.message.notification.SerialErrorMessage;
-import be.glever.ant.message.notification.StartupNotificationMessage;
-import be.glever.ant.message.requestedresponse.AntVersionMessage;
-import be.glever.ant.message.requestedresponse.CapabilitiesResponseMessage;
-import be.glever.ant.message.requestedresponse.ChannelIdMessage;
-import be.glever.ant.message.requestedresponse.ChannelStatusMessage;
-import be.glever.ant.message.requestedresponse.DeviceSerialNumberMessage;
-import be.glever.ant.util.ByteUtils;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Container and factory for all known antmessages.
@@ -61,13 +49,16 @@ public class AntMessageRegistry {
 		add(ChannelStatusMessage.class);
 		add(DeviceSerialNumberMessage.class);
 		add(CapabilitiesResponseMessage.class);
+
+		// Channel events
+		add(ChannelEventResponse.class);
 	}
 
 	/**
 	 * Parses the given bytes into the correct {@link AbstractAntMessage}
 	 * implementation. Precondition: the bytes represent 1 valid Ant Message (from
 	 * SYNC to checksum).
-	 * 
+	 *
 	 * @param bytes
 	 * @return
 	 */
@@ -79,7 +70,7 @@ public class AntMessageRegistry {
 		Class<? extends AbstractAntMessage> messageClass = registry.get(msgId);
 		AntMessage messageInstance = null;
 		if (messageClass == null) {
-			LOG.error("Could not convert {} to an AntMessage. Bytes received were {}", msgId,
+			LOG.error("Could not convert {} to an AntMessage. Bytes received were {}", ByteUtils.hexString(msgId),
 					ByteUtils.hexString(bytes));
 			messageInstance = new UnknownMessage(bytes);
 		} else {
@@ -136,7 +127,7 @@ public class AntMessageRegistry {
 
 		@Override
 		public String toString() {
-			return "UnknownMessage [msgId=" + getMessageId() + ", bytes=" + ByteUtils.hexString(bytes) + "]";
+			return "UnknownMessage [msgId=" + ByteUtils.hexString(getMessageId()) + ", bytes=" + ByteUtils.hexString(bytes) + "]";
 		}
 
 	}

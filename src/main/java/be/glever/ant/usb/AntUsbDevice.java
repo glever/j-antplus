@@ -81,13 +81,13 @@ public class AntUsbDevice implements Closeable {
 			antMessageUsbReader = new AntUsbMessageReader(inPipe, messageBus);
 			new Thread(antMessageUsbReader).start();
 
-			CompletableFuture<AntMessage> capabilitiesFuture = sendRequestMessage(createRequestMessage(CapabilitiesResponseMessage.MSG_ID));
+			CompletableFuture<AntMessage> capabilitiesFuture = sendMessage(createRequestMessage(CapabilitiesResponseMessage.MSG_ID));
 			this.capabilities = new AntUsbDeviceCapabilities((CapabilitiesResponseMessage) capabilitiesFuture.get());
 
-			CompletableFuture<AntMessage> antVersionFuture = sendRequestMessage(createRequestMessage(AntVersionMessage.MSG_ID));
+			CompletableFuture<AntMessage> antVersionFuture = sendMessage(createRequestMessage(AntVersionMessage.MSG_ID));
 			this.antVersion = ((AntVersionMessage) antVersionFuture.get()).getAntVersion();
 
-			CompletableFuture<AntMessage> deviceSerialNumberFuture = sendRequestMessage(createRequestMessage(DeviceSerialNumberMessage.MSG_ID));
+			CompletableFuture<AntMessage> deviceSerialNumberFuture = sendMessage(createRequestMessage(DeviceSerialNumberMessage.MSG_ID));
 			this.serialNumber = ((DeviceSerialNumberMessage) deviceSerialNumberFuture.get()).getSerialNumber();
 
 			LOG.debug("Capabilities: {}", this.capabilities.toString());
@@ -100,14 +100,14 @@ public class AntUsbDevice implements Closeable {
 
 	}
 
-	private CompletableFuture<AntMessage> sendRequestMessage(RequestMessage requestMessage) throws AntException {
+	private CompletableFuture<AntMessage> sendMessage(RequestMessage requestMessage) throws AntException {
 		byte msgIdRequested = requestMessage.getMsgIdRequested();
 
 		CompletableFuture<AntMessage> future = new CompletableFuture<>();
 
-		sendMessage(requestMessage, msg -> {
+		sendMessagePrivate(requestMessage, msg -> {
 			if (msg.getMessageId() != msgIdRequested) {
-				LOG.debug("MsgId {} does not match requested msgId {}, skipping", msg.getMessageId(), ByteUtils.hexString(msgIdRequested));
+				LOG.debug("MsgId {} does not match requested msgId {}, skipping", ByteUtils.hexString(msg.getMessageId()), ByteUtils.hexString(msgIdRequested));
 				return true;
 			}
 			future.complete(msg);
@@ -121,7 +121,7 @@ public class AntUsbDevice implements Closeable {
 		return new RequestMessage((byte) 0, requestedMsgId, (byte) 0, (byte) 0);
 	}
 
-	public synchronized void sendMessage(AntMessage message, MessageBusListener<AntMessage> listener)
+	public synchronized void sendMessagePrivate(AntMessage message, MessageBusListener<AntMessage> listener)
 			throws AntException {
 		try {
 			byte[] messageBytes = message.toByteArray();
