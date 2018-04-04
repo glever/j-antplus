@@ -7,18 +7,18 @@ import be.glever.ant.util.ByteArrayBuilder;
 public class AssignChannelMessage extends AbstractAntMessage {
 
 	private byte channelNumber;
-	private byte[] channelType;
+	private byte channelType;
 	private byte networkNumber;
 	private Byte extendedAssignment; // optional
 
-	public AssignChannelMessage(byte channelNumber, byte[] channelType, byte networkNumber, Byte extendedAssignment) {
+	public AssignChannelMessage(byte channelNumber, byte channelType, byte networkNumber, Byte extendedAssignment) {
 		this.channelNumber = channelNumber;
 		this.channelType = channelType;
 		this.networkNumber = networkNumber;
 		this.extendedAssignment = extendedAssignment;
 	}
 
-	public AssignChannelMessage(byte channelNumber, byte[] channelType, byte networkNumber) {
+	public AssignChannelMessage(byte channelNumber, byte channelType, byte networkNumber) {
 		this(channelNumber, channelType, networkNumber, null);
 	}
 

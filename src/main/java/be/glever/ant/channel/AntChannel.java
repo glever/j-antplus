@@ -1,13 +1,15 @@
 package be.glever.ant.channel;
 
+import be.glever.ant.constants.AntChannelType;
+
 public class AntChannel {
 	private AntChannelType channelType;
 	private AntChannelRfFrequency rfFrequency;
 	private AntChannelId channelId;
 	private AntChannelPeriod channelPeriod;
 	private AntChannelNetwork network;
-	
-	
+
+
 	public AntChannel() {
 	}
 
@@ -61,5 +63,4 @@ public class AntChannel {
 		this.network = network;
 	}
 
-	
 }

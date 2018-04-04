@@ -1,10 +1,17 @@
 package be.glever.ant.channel;
 
+import be.glever.ant.constants.AntNetworkKey;
+
 public class AntChannelNetwork {
 	private byte number = 0;
-	private byte[] key;
+	private byte[] keyBytes;
 
 	public AntChannelNetwork() {
+	}
+
+	public AntChannelNetwork(byte number, AntNetworkKey key) {
+		this.number = number;
+		this.keyBytes = key.getBytes();
 	}
 
 	public byte getNumber() {
@@ -15,12 +22,12 @@ public class AntChannelNetwork {
 		this.number = number;
 	}
 
-	public byte[] getKey() {
-		return key;
+	public byte[] getKeyBytes() {
+		return keyBytes;
 	}
 
-	public void setKey(byte[] key) {
-		this.key = key;
+	public void setKeyBytes(byte[] keyBytes) {
+		this.keyBytes = keyBytes;
 	}
 
 }

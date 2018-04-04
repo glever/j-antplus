@@ -2,6 +2,7 @@ package be.glever.anttest;
 
 import be.glever.ant.usb.AntUsbDevice;
 import be.glever.ant.usb.AntUsbDeviceFactory;
+import be.glever.antplus.hrm.HRMSlave;
 
 public class AntDeviceTest_Main {
 
@@ -9,6 +10,11 @@ public class AntDeviceTest_Main {
 		try(AntUsbDevice device = AntUsbDeviceFactory.getAvailableAntDevices().stream().findFirst()
 				.orElseThrow(() -> new Exception("No devices found"))){
 			device.initialize();
+
+			HRMSlave hrm = new HRMSlave(device);
+			hrm.listDevices();
+
+			System.in.read();
 		}
 	}
 

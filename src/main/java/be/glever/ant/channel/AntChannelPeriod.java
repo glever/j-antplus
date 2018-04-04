@@ -1,10 +1,13 @@
 package be.glever.ant.channel;
 
+import java.util.Arrays;
+
 public class AntChannelPeriod {
-	public static final double DEFAULT_FREQUENCY = 4;
+	public static final double DEFAULT_FREQUENCY_IN_HZ = 4;
+	public static AntChannelPeriod DEFAULT_CHANNEL_PERIOD = new AntChannelPeriod(DEFAULT_FREQUENCY_IN_HZ);
 	private byte[] value; // TODO remember this is little endian
-	
-	
+
+
 	/**
 	 * Creates a {@link ChannelPeriod} based upon the given Hertz following the formula
 	 * period = 32768 / Hz
@@ -16,11 +19,12 @@ public class AntChannelPeriod {
 		value[0] = (byte) period;
 		value[1] = (byte) (period >> 8);
 	}
-	
+
 	public AntChannelPeriod() {
-		this(DEFAULT_FREQUENCY);
+		this(DEFAULT_FREQUENCY_IN_HZ);
 	}
+
 	public byte[] getValue() {
-		return value;
+		return Arrays.copyOf(value, value.length);
 	}
 }

@@ -1,12 +1,20 @@
 package be.glever.ant.channel;
 
+import be.glever.ant.constants.AntDeviceType;
+
 public class AntChannelId {
 
 	private AntChannelTransmissionType transmissionType;
 	private byte deviceType; // set by master device, 0 for slave devices. TODO MSB is a pairing bit. split device type from pairing bit?
-	private byte[] deviceNumber; // TODO remember this is little endian
-	
+	private AntDeviceNumber deviceNumber; // TODO remember this is little endian
+
 	public AntChannelId() {
+	}
+
+	public AntChannelId(AntChannelTransmissionType transmissionType, AntDeviceType deviceType, AntDeviceNumber deviceNumber) {
+		this.transmissionType = transmissionType;
+		this.deviceType = deviceType.value();
+		this.deviceNumber = deviceNumber;
 	}
 
 	public AntChannelTransmissionType getTransmissionType() {
@@ -25,16 +33,13 @@ public class AntChannelId {
 		this.deviceType = deviceType;
 	}
 
-	public byte[] getDeviceNumber() {
+	public AntDeviceNumber getDeviceNumber() {
 		return deviceNumber;
 	}
 
-	public void setDeviceNumber(byte[] deviceNumber) {
-		if(deviceNumber.length != 2) {
-			throw new IllegalArgumentException("Device number should be 16 bits");
-		}
+	public void setDeviceNumber(AntDeviceNumber deviceNumber) {
 		this.deviceNumber = deviceNumber;
 	}
-	
-	
+
+
 }
