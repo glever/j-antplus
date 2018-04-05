@@ -3,6 +3,8 @@ package be.glever.ant.message.channel;
 import be.glever.ant.AntException;
 import be.glever.ant.message.AbstractAntMessage;
 
+import static be.glever.ant.util.ByteUtils.hexString;
+
 /**
  * todo Having 2 types of messages (Channel Event / Channel Response) bound to the same message id (0x40) may impact message generation logic as currently this is done directly through constructor (change to factory?)
  */
@@ -34,5 +36,15 @@ public class ChannelEventOrResponseMessage extends AbstractAntMessage {
 
 	public ChannelEvenResponseCode getResponseCode() {
 		return ChannelEvenResponseCode.fromValue(messageContentBytes[2]);
+	}
+
+	@Override
+	public String toString() {
+		return "ChannelEventOrResponseMessage{" +
+				"messageId=" + hexString(getMessageId()) +
+				",respondToMessageId=" + hexString(getRespondToMessageId()) +
+				",channelNumber=" + hexString(getChannelNumber()) +
+				",responseCode=" + getResponseCode().name() +
+				'}';
 	}
 }

@@ -1,7 +1,10 @@
 package be.glever.ant.usb;
 
 import be.glever.ant.AntException;
+import be.glever.ant.message.AbstractAntMessage;
+import be.glever.ant.message.AntBlockingMessage;
 import be.glever.ant.message.AntMessage;
+import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
 import be.glever.ant.message.control.RequestMessage;
 import be.glever.ant.message.requestedresponse.AntVersionMessage;
 import be.glever.ant.message.requestedresponse.CapabilitiesResponseMessage;
@@ -100,28 +103,50 @@ public class AntUsbDevice implements Closeable {
 
 	}
 
-	private CompletableFuture<AntMessage> sendMessage(RequestMessage requestMessage) throws AntException {
-		byte msgIdRequested = requestMessage.getMsgIdRequested();
-
-		CompletableFuture<AntMessage> future = new CompletableFuture<>();
-
-		sendMessagePrivate(requestMessage, msg -> {
-			if (msg.getMessageId() != msgIdRequested) {
-				LOG.debug("MsgId {} does not match requested msgId {}, skipping", ByteUtils.hexString(msg.getMessageId()), ByteUtils.hexString(msgIdRequested));
-				return true;
-			}
-			future.complete(msg);
-			return false;
-		});
-
-		return future;
-	}
-
 	private RequestMessage createRequestMessage(byte requestedMsgId) {
 		return new RequestMessage((byte) 0, requestedMsgId, (byte) 0, (byte) 0);
 	}
 
-	public synchronized void sendMessagePrivate(AntMessage message, MessageBusListener<AntMessage> listener)
+	private CompletableFuture<AntMessage> sendMessage(AntMessage requestMessage) throws AntException {
+		CompletableFuture<AntMessage> future = new CompletableFuture<>();
+		sendMessage(requestMessage, createListenerIfNeeded(requestMessage, future));
+		return future;
+	}
+
+	private MessageBusListener<AntMessage> createListenerIfNeeded(AntMessage msgToSend, CompletableFuture<AntMessage> future) {
+
+		if (msgToSend instanceof RequestMessage) {
+			return msg -> {
+				RequestMessage requestMsgToSend = (RequestMessage) msgToSend;
+				if (requestMsgToSend.getMsgIdRequested() == msg.getMessageId()) {
+					LOG.debug("RequestMessageListener, treating message " + ByteUtils.hexString(((AbstractAntMessage)msg).getMessageContent()));
+					future.complete(msg);
+					return true;
+				}
+				LOG.debug("RequestMessageListener. Waiting for msgId {}  NOT treating message {}", ByteUtils.hexString(requestMsgToSend.getMsgIdRequested()), ByteUtils.hexString(msg.toByteArray()));
+				return false;
+			};
+		} else if (msgToSend instanceof AntBlockingMessage) {
+			return msg -> {
+				if (msg instanceof ChannelEventOrResponseMessage) {
+					ChannelEventOrResponseMessage channelEventOrResponseMessage = (ChannelEventOrResponseMessage) msg;
+					if (((ChannelEventOrResponseMessage) msg).getRespondToMessageId() == msgToSend.getMessageId()) {
+						LOG.debug("ChannelEventMessageListener, treating message " + ByteUtils.hexString(((ChannelEventOrResponseMessage) msg).getMessageContent()));
+						future.complete(msg);
+						return true;
+					}
+					LOG.debug("ChannelEventMessageListener. Waiting for msgId {}  NOT treating message {}"
+							, ByteUtils.hexString(channelEventOrResponseMessage.getRespondToMessageId())
+							, ByteUtils.hexString(msg.toByteArray()));
+				}
+				return false;
+			};
+		}
+		return null;
+	}
+
+
+	public synchronized void sendMessage(AntMessage message, MessageBusListener<AntMessage> listener)
 			throws AntException {
 		try {
 			byte[] messageBytes = message.toByteArray();
@@ -161,7 +186,7 @@ public class AntUsbDevice implements Closeable {
 
 		@Override
 		public boolean handle(AntMessage antMessage) {
-			LOG.debug("GlobalMessageListener: Received {}", antMessage.getClass());
+			LOG.debug("GlobalMessageListener: Received {}", antMessage.toString());
 			return true;
 		}
 	}

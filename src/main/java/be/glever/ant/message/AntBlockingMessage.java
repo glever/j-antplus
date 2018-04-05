@@ -3,5 +3,5 @@ package be.glever.ant.message;
 /**
  * Marker interface to indicate that ANT will generate a response.
  */
-public interface AntBlockingMessage {
+public interface AntBlockingMessage extends AntMessage{
 }

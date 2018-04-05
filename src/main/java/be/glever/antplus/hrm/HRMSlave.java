@@ -2,7 +2,6 @@ package be.glever.antplus.hrm;
 
 import be.glever.ant.AntException;
 import be.glever.ant.channel.*;
-import be.glever.ant.constants.AntChannelType;
 import be.glever.ant.message.configuration.AssignChannelMessage;
 import be.glever.ant.usb.AntUsbDevice;
 
@@ -20,7 +19,7 @@ public class HRMSlave {
 
 		// ASSIGN CHANNEL
 		AssignChannelMessage assignChannelMessage = new AssignChannelMessage((byte) channel.getChannelType().ordinal(), channel.getChannelType().getValue(), channel.getNetwork().getNumber());
-		antUsbDevice.sendMessagePrivate(assignChannelMessage, null );
+		antUsbDevice.sendMessage(assignChannelMessage, null );
 
 		// OPEN CHANNEL
 		return null;
