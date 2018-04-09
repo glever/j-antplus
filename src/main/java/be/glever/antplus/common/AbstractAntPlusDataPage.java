@@ -1,13 +1,13 @@
-package be.glever.antplus.hrm.common.datapage;
+package be.glever.antplus.common;
 
 /**
  * Abstract super class for all DataPages.
  */
-public abstract class AbstractDataPage {
+public abstract class AbstractAntPlusDataPage {
 
 	private byte[] dataPageBytes;
 
-	public AbstractDataPage(byte[] dataPageBytes) {
+	public AbstractAntPlusDataPage(byte[] dataPageBytes) {
 		this.dataPageBytes = dataPageBytes;
 	}
 

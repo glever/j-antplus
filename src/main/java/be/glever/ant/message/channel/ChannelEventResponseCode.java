@@ -1,6 +1,6 @@
 package be.glever.ant.message.channel;
 
-public enum ChannelEvenResponseCode {
+public enum ChannelEventResponseCode {
 	RESPONSE_NO_ERROR((byte) 0x00),
 	EVENT_RX_SEARCH_TIMEOUT((byte) 0x01),
 	EVENT_RX_FAIL((byte) 0x01),
@@ -39,12 +39,12 @@ public enum ChannelEvenResponseCode {
 
 	private byte code;
 
-	ChannelEvenResponseCode(byte value) {
+	ChannelEventResponseCode(byte value) {
 		this.code = value;
 	}
 
-	public static ChannelEvenResponseCode fromValue(byte value) {
-		for (ChannelEvenResponseCode channelEvenResponseCode : values()) {
+	public static ChannelEventResponseCode fromValue(byte value) {
+		for (ChannelEventResponseCode channelEvenResponseCode : values()) {
 			if (value == channelEvenResponseCode.code) {
 				return channelEvenResponseCode;
 			}

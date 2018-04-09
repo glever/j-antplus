@@ -19,7 +19,7 @@ public class HRMSlave {
 
 		// ASSIGN CHANNEL
 		AssignChannelMessage assignChannelMessage = new AssignChannelMessage((byte) channel.getChannelType().ordinal(), channel.getChannelType().getValue(), channel.getNetwork().getNumber());
-		antUsbDevice.sendMessage(assignChannelMessage, null );
+		antUsbDevice.sendMessage(assignChannelMessage );
 
 		// OPEN CHANNEL
 		return null;

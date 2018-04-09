@@ -34,7 +34,7 @@ public class CapabilitiesResponseMessage extends AbstractAntMessage {
 		this.messageBytes = messageContentBytes;
 	}
 
-	public short getMaxChannels() {
+	public byte getMaxChannels() {
 		return messageBytes[0];
 	}
 

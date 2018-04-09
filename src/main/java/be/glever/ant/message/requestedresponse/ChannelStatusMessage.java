@@ -5,13 +5,16 @@ import be.glever.ant.message.AbstractAntMessage;
 
 public class ChannelStatusMessage extends AbstractAntMessage {
 
+	public static final byte MSG_ID = 0x52;
+
 	private byte[] bytes;
 
 	public ChannelStatusMessage() {
 	}
+
 	@Override
 	public byte getMessageId() {
-		return 0x52;
+		return MSG_ID;
 	}
 
 	@Override
@@ -37,18 +40,25 @@ public class ChannelStatusMessage extends AbstractAntMessage {
 
 		public static CHANNEL_STATUS fromValue(byte value) {
 			switch (value & 3) {
-			case 0:
-				return UnAssigned;
-			case 1:
-				return Assigned;
-			case 2:
-				return Searching;
-			case 3:
-				return Tracking;
-			default:
-				throw new IllegalArgumentException("Bad value passed");
+				case 0:
+					return UnAssigned;
+				case 1:
+					return Assigned;
+				case 2:
+					return Searching;
+				case 3:
+					return Tracking;
+				default:
+					throw new IllegalArgumentException("Bad value passed");
 			}
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "ChannelStatusMessage{" +
+				"channelStatus=" + getChannelStatus() +
+				", channelStatus=" + getChannelStatus() +
+				'}';
+	}
 }

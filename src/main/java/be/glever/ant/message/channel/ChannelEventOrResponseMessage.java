@@ -34,8 +34,8 @@ public class ChannelEventOrResponseMessage extends AbstractAntMessage {
 		return messageContentBytes[1];
 	}
 
-	public ChannelEvenResponseCode getResponseCode() {
-		return ChannelEvenResponseCode.fromValue(messageContentBytes[2]);
+	public ChannelEventResponseCode getResponseCode() {
+		return ChannelEventResponseCode.fromValue(messageContentBytes[2]);
 	}
 
 	@Override

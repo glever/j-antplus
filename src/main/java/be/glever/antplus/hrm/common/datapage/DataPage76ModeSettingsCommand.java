@@ -1,6 +1,8 @@
 package be.glever.antplus.hrm.common.datapage;
 
-public class DataPage76ModeSettingsCommand extends AbstractDataPage {
+import be.glever.antplus.common.AbstractAntPlusDataPage;
+
+public class DataPage76ModeSettingsCommand extends AbstractAntPlusDataPage {
 
 	public enum SPORT_MODE {
 		RUNNING, CYCLING, SWIMMING;

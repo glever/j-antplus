@@ -5,11 +5,13 @@ import be.glever.ant.message.AbstractAntMessage;
 import be.glever.ant.message.AntBlockingMessage;
 import be.glever.ant.message.AntMessage;
 import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
+import be.glever.ant.message.channel.ChannelEventResponseCode;
+import be.glever.ant.message.configuration.UnassignChannelMessage;
 import be.glever.ant.message.control.RequestMessage;
 import be.glever.ant.message.requestedresponse.AntVersionMessage;
 import be.glever.ant.message.requestedresponse.CapabilitiesResponseMessage;
+import be.glever.ant.message.requestedresponse.ChannelStatusMessage;
 import be.glever.ant.message.requestedresponse.SerialNumberMessage;
-import be.glever.ant.messagebus.MessageBus;
 import be.glever.ant.messagebus.MessageBusListener;
 import be.glever.ant.util.ByteUtils;
 import org.slf4j.Logger;
@@ -20,6 +22,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Provides abstraction of and interaction with an ANT USB dongle.
@@ -31,11 +34,9 @@ public class AntUsbDevice implements Closeable {
 
 	private boolean initialized = false;
 	private UsbDevice device;
-	private MessageBus<AntMessage> messageBus;
 
 	private UsbPipe outPipe;
 
-	private UsbPipe inPipe;
 	private byte[] antVersion;
 	private AntUsbDeviceCapabilities capabilities;
 	private byte[] serialNumber;
@@ -75,13 +76,12 @@ public class AntUsbDevice implements Closeable {
 			outPipe = outEndpoint.getUsbPipe();
 			outPipe.open();
 
-			inPipe = inEndpoint.getUsbPipe();
+			UsbPipe inPipe = inEndpoint.getUsbPipe();
 			inPipe.open();
 
-			this.messageBus = new MessageBus<>();
-			messageBus.addQueueListener(-1, -1, new GlobalMessageBusListener());
 
-			antMessageUsbReader = new AntUsbMessageReader(inPipe, messageBus);
+			antMessageUsbReader = new AntUsbMessageReader(inPipe);
+			antMessageUsbReader.addQueueListener(-1, -1, new GlobalMessageBusListener());
 			new Thread(antMessageUsbReader).start();
 
 			CompletableFuture<AntMessage> capabilitiesFuture = sendMessage(createRequestMessage(CapabilitiesResponseMessage.MSG_ID));
@@ -107,7 +107,7 @@ public class AntUsbDevice implements Closeable {
 		return new RequestMessage((byte) 0, requestedMsgId, (byte) 0, (byte) 0);
 	}
 
-	private CompletableFuture<AntMessage> sendMessage(AntMessage requestMessage) throws AntException {
+	public CompletableFuture<AntMessage> sendMessage(AntMessage requestMessage) throws AntException {
 		CompletableFuture<AntMessage> future = new CompletableFuture<>();
 		sendMessage(requestMessage, createListenerIfNeeded(requestMessage, future));
 		return future;
@@ -119,7 +119,7 @@ public class AntUsbDevice implements Closeable {
 			return msg -> {
 				RequestMessage requestMsgToSend = (RequestMessage) msgToSend;
 				if (requestMsgToSend.getMsgIdRequested() == msg.getMessageId()) {
-					LOG.debug("RequestMessageListener, treating message " + ByteUtils.hexString(((AbstractAntMessage)msg).getMessageContent()));
+					LOG.debug("RequestMessageListener, treating message " + ByteUtils.hexString(((AbstractAntMessage) msg).getMessageContent()));
 					future.complete(msg);
 					return true;
 				}
@@ -145,8 +145,7 @@ public class AntUsbDevice implements Closeable {
 		return null;
 	}
 
-
-	public synchronized void sendMessage(AntMessage message, MessageBusListener<AntMessage> listener)
+	private synchronized void sendMessage(AntMessage message, MessageBusListener<AntMessage> listener)
 			throws AntException {
 		try {
 			byte[] messageBytes = message.toByteArray();
@@ -155,7 +154,7 @@ public class AntUsbDevice implements Closeable {
 			}
 
 			if (listener != null) {
-				messageBus.addQueueListener(DEFAULT_TIMEOUT, 1, listener);
+				antMessageUsbReader.addQueueListener(DEFAULT_TIMEOUT, 1, listener);
 			}
 			outPipe.syncSubmit(messageBytes);
 		} catch (Throwable t) {
@@ -170,16 +169,54 @@ public class AntUsbDevice implements Closeable {
 	@Override
 	public void close() throws IOException {
 		try {
+			closeAllChannels();
+		} catch (Exception e) {
+			LOG.error("Error during shutdown at closeAllChannels step. Continuing with release of usb device.", e);
+		}
+
+		try {
 			this.antMessageUsbReader.stop();
 			UsbInterface activeUsbInterface = getActiveUsbInterface();
 			if (activeUsbInterface.isClaimed()) {
 				activeUsbInterface.release();
 			}
-			messageBus.close();
+			antMessageUsbReader.close();
 
 		} catch (Exception e) {
 			throw new IOException(e.getMessage(), e);
 		}
+	}
+
+	public void closeAllChannels() throws AntException, ExecutionException, InterruptedException {
+		short maxChannels = capabilities.getMaxChannels();
+		for (int i = 0; i < maxChannels; i++) {
+			RequestMessage requestMessage = new RequestMessage((byte) i, ChannelStatusMessage.MSG_ID);
+			ChannelStatusMessage responseMessage = (ChannelStatusMessage) sendMessage(requestMessage).get();
+			byte channelNumber = responseMessage.getChannelNumber();
+			ChannelStatusMessage.CHANNEL_STATUS channelStatus = responseMessage.getChannelStatus();
+			LOG.debug("Channel {} is in state {}.", channelNumber, channelStatus);
+
+			switch (channelStatus) {
+				case UnAssigned:
+					break;
+				case Assigned:
+					closeChannel(channelNumber);
+					break;
+				default:
+					throw new AntException("Don't know (yet) how to close channel in current state " + channelStatus + ".");
+			}
+		}
+
+	}
+
+	private void closeChannel(byte channelNumber) throws InterruptedException, ExecutionException, AntException {
+		UnassignChannelMessage unassignChannelMessage = new UnassignChannelMessage(channelNumber);
+		ChannelEventOrResponseMessage unassignResponseMsg = (ChannelEventOrResponseMessage) sendMessage(unassignChannelMessage).get();
+		if (unassignResponseMsg.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
+			LOG.debug("Received unexpected message {}. Halting program.", unassignResponseMsg);
+			throw new AntException("Could not close channel " + channelNumber);
+		}
+		LOG.debug("Successfully unassigned channel {}.", channelNumber);
 	}
 
 	private static class GlobalMessageBusListener implements MessageBusListener<AntMessage> {
@@ -191,4 +228,7 @@ public class AntUsbDevice implements Closeable {
 		}
 	}
 
+	public AntUsbDeviceCapabilities getCapabilities() {
+		return capabilities;
+	}
 }

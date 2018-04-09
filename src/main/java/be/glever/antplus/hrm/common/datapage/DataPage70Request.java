@@ -1,6 +1,8 @@
 package be.glever.antplus.hrm.common.datapage;
 
-public class DataPage70Request extends AbstractDataPage {
+import be.glever.antplus.common.AbstractAntPlusDataPage;
+
+public class DataPage70Request extends AbstractAntPlusDataPage {
 
 	public static final int PAGE_NUMBER = 70;
 

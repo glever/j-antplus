@@ -1,6 +1,6 @@
 package be.glever.ant.channel;
 
-import be.glever.ant.constants.AntDeviceType;
+import be.glever.ant.constants.AntPlusDeviceType;
 
 public class AntChannelId {
 
@@ -11,7 +11,7 @@ public class AntChannelId {
 	public AntChannelId() {
 	}
 
-	public AntChannelId(AntChannelTransmissionType transmissionType, AntDeviceType deviceType, AntDeviceNumber deviceNumber) {
+	public AntChannelId(AntChannelTransmissionType transmissionType, AntPlusDeviceType deviceType, AntDeviceNumber deviceNumber) {
 		this.transmissionType = transmissionType;
 		this.deviceType = deviceType.value();
 		this.deviceNumber = deviceNumber;

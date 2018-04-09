@@ -32,19 +32,19 @@ public abstract class AbstractAntMessage implements AntMessage {
 		return bytes;
 	}
 
+	@Override
+	public void parse(byte[] bytes) throws AntException {
+		validateNumberDataBytes(bytes);
+		validateChecksum(bytes);
+		setMessageBytes(Arrays.copyOfRange(bytes, 3, bytes.length - 1));
+	}
+
 	private byte getCheckSum(byte[] bytes, int idx) {
 		byte checksum = bytes[0];
 		for (int i = 1; i < idx; i++) {
 			checksum ^= bytes[i];
 		}
 		return checksum;
-	}
-
-	@Override
-	public void parse(byte[] bytes) throws AntException {
-		validateNumberDataBytes(bytes);
-		validateChecksum(bytes);
-		setMessageBytes(Arrays.copyOfRange(bytes, 3, bytes.length - 1));
 	}
 
 	private void validateChecksum(byte[] bytes) throws AntException {

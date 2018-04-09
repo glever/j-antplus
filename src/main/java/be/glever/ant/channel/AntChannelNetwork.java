@@ -1,6 +1,6 @@
 package be.glever.ant.channel;
 
-import be.glever.ant.constants.AntNetworkKey;
+import be.glever.ant.constants.AntNetworkKeys;
 
 public class AntChannelNetwork {
 	private byte number = 0;
@@ -9,7 +9,7 @@ public class AntChannelNetwork {
 	public AntChannelNetwork() {
 	}
 
-	public AntChannelNetwork(byte number, AntNetworkKey key) {
+	public AntChannelNetwork(byte number, AntNetworkKeys key) {
 		this.number = number;
 		this.keyBytes = key.getBytes();
 	}

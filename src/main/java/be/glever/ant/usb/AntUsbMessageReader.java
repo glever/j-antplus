@@ -1,20 +1,20 @@
 package be.glever.ant.usb;
 
-import javax.usb.UsbPipe;
-import javax.usb.util.DefaultUsbIrp;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import be.glever.ant.message.AntMessage;
 import be.glever.ant.message.AntMessageRegistry;
 import be.glever.ant.messagebus.MessageBus;
+import be.glever.ant.messagebus.MessageBusListener;
 import be.glever.ant.util.ByteUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.usb.UsbPipe;
+import javax.usb.util.DefaultUsbIrp;
 
 /**
  * Reads an {@link UsbPipe} and parses the bytestream to {@link AntMessage}s
  * which are then dispatched on a {@link MessageBus}.
- * 
+ *
  * @author glen
  *
  */
@@ -25,9 +25,9 @@ public class AntUsbMessageReader implements Runnable {
 	private MessageBus<AntMessage> messageBus;
 	private Thread runningThread;
 
-	public AntUsbMessageReader(UsbPipe inPipe, MessageBus<AntMessage> messageBus) {
+	public AntUsbMessageReader(UsbPipe inPipe) {
 		this.inPipe = inPipe;
-		this.messageBus = messageBus;
+		this.messageBus = new MessageBus<>();
 	}
 
 	@Override
@@ -47,14 +47,14 @@ public class AntUsbMessageReader implements Runnable {
 					}
 				} else {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("Read {} bytes", ByteUtils.hexString(buffer));						
+						LOG.debug("Read {} bytes", ByteUtils.hexString(buffer));
 					}
-					
+
 					messageBus.put(AntMessageRegistry.from(buffer));
 				}
 			} catch (Throwable t) {
-				if(! stop) {
-					LOG.error(t.getMessage(), t);					
+				if (!stop) {
+					LOG.error(t.getMessage(), t);
 				}
 			}
 		}
@@ -65,4 +65,11 @@ public class AntUsbMessageReader implements Runnable {
 		runningThread.interrupt();
 	}
 
+	public void addQueueListener(long timeout, int nrOfMessages, MessageBusListener lister) {
+		this.messageBus.addQueueListener(timeout, nrOfMessages, lister);
+	}
+
+	public void close() {
+		this.messageBus.close();
+	}
 }

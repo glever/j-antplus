@@ -5,7 +5,7 @@ import be.glever.ant.message.AbstractAntMessage;
 import be.glever.ant.message.AntBlockingMessage;
 import be.glever.ant.util.ByteArrayBuilder;
 
-public class RequestMessage extends AbstractAntMessage  implements AntBlockingMessage {
+public class RequestMessage extends AbstractAntMessage implements AntBlockingMessage {
 
 	public static final byte MSG_ID = 0x4d;
 
@@ -14,6 +14,17 @@ public class RequestMessage extends AbstractAntMessage  implements AntBlockingMe
 	public RequestMessage() {
 	}
 
+	public RequestMessage(byte channelNumberOrSubMessageId, byte msgIdRequested) {
+		this(channelNumberOrSubMessageId, msgIdRequested, null, null);
+	}
+
+	/**
+	 *
+	 * @param channelNumberOrSubMessageId
+	 * @param msgIdRequested
+	 * @param addr only used when reading NVM message
+	 * @param size only used when reading NVM message
+	 */
 	public RequestMessage(byte channelNumberOrSubMessageId, byte msgIdRequested, Byte addr, Byte size) {
 		this.bytes = new ByteArrayBuilder().write(channelNumberOrSubMessageId, msgIdRequested).writeIfNotNull(addr)
 				.writeIfNotNull(size).toByteArray();

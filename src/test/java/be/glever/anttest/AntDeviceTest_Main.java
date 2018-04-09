@@ -10,6 +10,7 @@ public class AntDeviceTest_Main {
 		try(AntUsbDevice device = AntUsbDeviceFactory.getAvailableAntDevices().stream().findFirst()
 				.orElseThrow(() -> new Exception("No devices found"))){
 			device.initialize();
+			device.closeAllChannels(); // channels stay open on usb dongle even if program shuts down.
 
 			HRMSlave hrm = new HRMSlave(device);
 			hrm.listDevices();

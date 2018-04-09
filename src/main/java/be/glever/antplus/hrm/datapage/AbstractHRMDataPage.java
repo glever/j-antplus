@@ -1,11 +1,11 @@
 package be.glever.antplus.hrm.datapage;
 
 import be.glever.ant.util.ByteUtils;
-import be.glever.antplus.hrm.common.datapage.AbstractDataPage;
+import be.glever.antplus.common.AbstractAntPlusDataPage;
 
 import java.util.Arrays;
 
-public abstract class AbstractHRMDataPage extends AbstractDataPage {
+public abstract class AbstractHRMDataPage extends AbstractAntPlusDataPage {
 
 	public AbstractHRMDataPage(byte[] dataPageBytes) {
 		super(dataPageBytes);
