@@ -8,11 +8,11 @@ import be.glever.ant.util.ByteArrayBuilder;
 public class ChannelRfFrequencyMessage extends AbstractAntMessage  implements AntBlockingMessage {
 
 	private byte channelNumber;
-	private byte[] channelPeriod;
+	private byte channelRfFrequency;
 
-	public ChannelRfFrequencyMessage(byte channelNumber, byte[] channelPeriod) {
+	public ChannelRfFrequencyMessage(byte channelNumber, byte channelRfFrequency) {
 		this.channelNumber = channelNumber;
-		this.channelPeriod = channelPeriod;
+		this.channelRfFrequency = channelRfFrequency;
 	}
 
 	public ChannelRfFrequencyMessage() {
@@ -27,7 +27,7 @@ public class ChannelRfFrequencyMessage extends AbstractAntMessage  implements An
 	public byte[] getMessageContent() {
 		return new ByteArrayBuilder()
 				.write(channelNumber)
-				.write(channelPeriod)
+				.write(channelRfFrequency)
 				.toByteArray();
 	}
 

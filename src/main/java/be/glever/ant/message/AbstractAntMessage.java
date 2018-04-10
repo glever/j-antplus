@@ -3,6 +3,7 @@ package be.glever.ant.message;
 import java.util.Arrays;
 
 import be.glever.ant.AntException;
+import be.glever.ant.util.ByteArrayBuilder;
 import be.glever.ant.util.ByteUtils;
 
 public abstract class AbstractAntMessage implements AntMessage {
@@ -15,21 +16,17 @@ public abstract class AbstractAntMessage implements AntMessage {
 
 	@Override
 	public byte[] toByteArray() {
-		byte[] bytes = new byte[8];
 		byte[] messageContent = getMessageContent();
 
-		int idx = 0;
-		bytes[idx++] = sync;
+		ByteArrayBuilder bab = new ByteArrayBuilder();
+		bab.write(sync);
+		bab.write((byte) messageContent.length);
+		bab.write(getMessageId());
+		bab.write(messageContent);
+		bab.write(getCheckSum(bab.toByteArray()));
+		bab.write((byte)0x00, (byte)0x00);
 
-		bytes[idx++] = (byte) messageContent.length;
-		bytes[idx++] = getMessageId();
-
-		for (byte bite : messageContent) {
-			bytes[idx++] = bite;
-		}
-		bytes[idx++] = getCheckSum(bytes, idx);
-
-		return bytes;
+		return bab.toByteArray();
 	}
 
 	@Override
@@ -39,9 +36,9 @@ public abstract class AbstractAntMessage implements AntMessage {
 		setMessageBytes(Arrays.copyOfRange(bytes, 3, bytes.length - 1));
 	}
 
-	private byte getCheckSum(byte[] bytes, int idx) {
+	private byte getCheckSum(byte[] bytes) {
 		byte checksum = bytes[0];
-		for (int i = 1; i < idx; i++) {
+		for (int i = 1; i < bytes.length; i++) {
 			checksum ^= bytes[i];
 		}
 		return checksum;

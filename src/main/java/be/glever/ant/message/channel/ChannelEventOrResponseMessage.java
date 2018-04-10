@@ -2,18 +2,19 @@ package be.glever.ant.message.channel;
 
 import be.glever.ant.AntException;
 import be.glever.ant.message.AbstractAntMessage;
+import be.glever.ant.message.AntBlockingMessage;
 
 import static be.glever.ant.util.ByteUtils.hexString;
 
 /**
  * todo Having 2 types of messages (Channel Event / Channel Response) bound to the same message id (0x40) may impact message generation logic as currently this is done directly through constructor (change to factory?)
  */
-public class ChannelEventOrResponseMessage extends AbstractAntMessage {
+public class ChannelEventOrResponseMessage extends AbstractAntMessage implements AntBlockingMessage {
 	private byte[] messageContentBytes;
 
 	@Override
 	public byte[] getMessageContent() {
-		return new byte[0];
+		return messageContentBytes;
 	}
 
 	@Override

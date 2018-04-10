@@ -150,7 +150,7 @@ public class AntUsbDevice implements Closeable {
 		try {
 			byte[] messageBytes = message.toByteArray();
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Sending {} with bytes {}.", message.getClass(), ByteUtils.hexString(messageBytes));
+				LOG.debug("Sending {} with bytes {}.", message.getClass().getSimpleName(), ByteUtils.hexString(messageBytes));
 			}
 
 			if (listener != null) {

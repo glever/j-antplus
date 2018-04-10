@@ -3,7 +3,7 @@ package be.glever.ant.channel;
 import java.util.Arrays;
 
 public class AntChannelPeriod {
-	public static final double DEFAULT_FREQUENCY_IN_HZ = 4;
+	public static final double DEFAULT_FREQUENCY_IN_HZ = 4.06;
 	public static AntChannelPeriod DEFAULT_CHANNEL_PERIOD = new AntChannelPeriod(DEFAULT_FREQUENCY_IN_HZ);
 	private byte[] value; // TODO remember this is little endian
 

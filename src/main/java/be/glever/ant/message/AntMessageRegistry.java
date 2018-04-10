@@ -29,6 +29,8 @@ public class AntMessageRegistry {
 		add(ChannelRfFrequencyMessage.class);
 		add(SearchTimeoutMessage.class);
 		add(UnassignChannelMessage.class);
+		add(NetworkKeyMessage.class);
+		add(ChannelIdMessage.class);
 
 		// control
 		add(CloseChannelMessage.class);
@@ -45,7 +47,6 @@ public class AntMessageRegistry {
 
 		// requested response
 		add(AntVersionMessage.class);
-		add(ChannelIdMessage.class);
 		add(ChannelStatusMessage.class);
 		add(SerialNumberMessage.class);
 		add(CapabilitiesResponseMessage.class);
@@ -78,7 +79,7 @@ public class AntMessageRegistry {
 			messageInstance.parse(bytes);
 		}
 
-		LOG.debug("Converted {} to {}", ByteUtils.hexString(bytes), messageInstance.getClass());
+		LOG.debug("Converted {} to {}", ByteUtils.hexString(bytes), messageInstance.getClass().getSimpleName());
 		return messageInstance;
 	}
 

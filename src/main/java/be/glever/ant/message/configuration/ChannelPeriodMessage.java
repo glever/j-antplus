@@ -5,14 +5,14 @@ import be.glever.ant.message.AbstractAntMessage;
 import be.glever.ant.message.AntBlockingMessage;
 import be.glever.ant.util.ByteArrayBuilder;
 
-public class ChannelPeriodMessage extends AbstractAntMessage  implements AntBlockingMessage {
+public class ChannelPeriodMessage extends AbstractAntMessage implements AntBlockingMessage {
 
 	private byte channelNumber;
-	private byte rfFrequency;
+	private byte[] period;
 
-	public ChannelPeriodMessage(byte channelNumber, byte rfFrequency) {
+	public ChannelPeriodMessage(byte channelNumber, byte period[]) {
 		this.channelNumber = channelNumber;
-		this.rfFrequency = rfFrequency;
+		this.period = period;
 	}
 
 	public ChannelPeriodMessage() {
@@ -27,14 +27,14 @@ public class ChannelPeriodMessage extends AbstractAntMessage  implements AntBloc
 	public byte[] getMessageContent() {
 		return new ByteArrayBuilder()
 				.write(channelNumber)
-				.write(rfFrequency)
+				.write(period)
 				.toByteArray();
 	}
 
 	@Override
 	public void setMessageBytes(byte[] messageContentBytes) throws AntException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

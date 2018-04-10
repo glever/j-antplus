@@ -1,7 +1,5 @@
 package be.glever.ant.util;
 
-import java.nio.ByteBuffer;
-
 public class ByteUtils {
 
 	public static String binaryString(byte[] bytes) {
@@ -21,11 +19,11 @@ public class ByteUtils {
 		}
 		return sb.toString();
 	}
-	
+
 	public static boolean hasMask(int value, int mask) {
 		return (value & mask) == mask;
 	}
-	
+
 	public static boolean hasBitSet(int value, int bitPos) {
 		return hasMask(value, 1 << bitPos);
 	}
@@ -34,16 +32,27 @@ public class ByteUtils {
 		return hexString(new byte[]{bite});
 	}
 
-	public static int toInt(byte... byteArray){
-		if(byteArray.length > 4){
+	public static int toInt(byte... byteArray) {
+		if (byteArray.length > 4) {
 			throw new IllegalArgumentException("ByteArray too large to convert to int. Length was: " + byteArray.length);
 		}
 
-		int val  = 0;
-		for(byte b: byteArray){
+		int val = 0;
+		for (byte b : byteArray) {
 			val = val << 8;
 			val |= b;
 		}
 		return val;
+	}
+
+	/**
+	 * returns 2 byte array representing the unsigned value
+	 * @param val
+	 */
+	public static byte[] toUShort(int val) {
+		byte[] ret = new byte[2];
+		ret[1] = (byte) val;
+		ret[0] = (byte) (val >> 8);
+		return ret;
 	}
 }
