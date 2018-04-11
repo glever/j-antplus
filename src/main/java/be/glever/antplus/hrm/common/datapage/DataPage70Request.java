@@ -1,6 +1,6 @@
 package be.glever.antplus.hrm.common.datapage;
 
-import be.glever.antplus.common.AbstractAntPlusDataPage;
+import be.glever.antplus.common.datapage.AbstractAntPlusDataPage;
 
 public class DataPage70Request extends AbstractAntPlusDataPage {
 
@@ -47,7 +47,7 @@ public class DataPage70Request extends AbstractAntPlusDataPage {
 	}
 
 	@Override
-	public int getPageNumber() {
+	public byte getPageNumber() {
 		return PAGE_NUMBER;
 	}
 }

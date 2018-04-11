@@ -1,7 +1,7 @@
 package be.glever.antplus.hrm.datapage;
 
 import be.glever.ant.util.ByteUtils;
-import be.glever.antplus.common.AbstractAntPlusDataPage;
+import be.glever.antplus.common.datapage.AbstractAntPlusDataPage;
 
 import java.util.Arrays;
 
