@@ -20,7 +20,7 @@ public class ChannelRfFrequencyMessage extends AbstractAntMessage  implements An
 
 	@Override
 	public byte getMessageId() {
-		return 0x43;
+		return 0x45;
 	}
 
 	@Override

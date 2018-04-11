@@ -39,7 +39,7 @@ public class ChannelStatusMessage extends AbstractAntMessage {
 		UnAssigned, Assigned, Searching, Tracking;
 
 		public static CHANNEL_STATUS fromValue(byte value) {
-			switch (value & 3) {
+			switch (value & 0b11) {
 				case 0:
 					return UnAssigned;
 				case 1:

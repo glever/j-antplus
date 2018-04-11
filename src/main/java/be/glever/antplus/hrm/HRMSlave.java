@@ -33,7 +33,7 @@ public class HRMSlave {
 			throw new RuntimeException("Could not set network key");
 		}
 
-		AssignChannelMessage assignChannelMessage = new AssignChannelMessage(channelNumber, (byte) 0x00, (byte) 0x00);
+		AssignChannelMessage assignChannelMessage = new AssignChannelMessage(channelNumber, (byte) 0x40, (byte) 0x00);
 		ChannelEventOrResponseMessage response = (ChannelEventOrResponseMessage) antUsbDevice.sendMessage(assignChannelMessage).get();
 		if (response.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
 			throw new RuntimeException("Could not assign channel");

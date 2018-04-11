@@ -24,7 +24,7 @@ public abstract class AbstractAntMessage implements AntMessage {
 		bab.write(getMessageId());
 		bab.write(messageContent);
 		bab.write(getCheckSum(bab.toByteArray()));
-		bab.write((byte)0x00, (byte)0x00);
+		bab.write((byte)0x00, (byte)0x00); // recommendation
 
 		return bab.toByteArray();
 	}

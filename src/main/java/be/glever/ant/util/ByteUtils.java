@@ -51,8 +51,8 @@ public class ByteUtils {
 	 */
 	public static byte[] toUShort(int val) {
 		byte[] ret = new byte[2];
-		ret[1] = (byte) val;
-		ret[0] = (byte) (val >> 8);
+		ret[0] = (byte) val;
+		ret[1] = (byte) (val >> 8);
 		return ret;
 	}
 }

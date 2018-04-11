@@ -20,7 +20,7 @@ public class ChannelPeriodMessage extends AbstractAntMessage implements AntBlock
 
 	@Override
 	public byte getMessageId() {
-		return 0x45;
+		return 0x43;
 	}
 
 	@Override

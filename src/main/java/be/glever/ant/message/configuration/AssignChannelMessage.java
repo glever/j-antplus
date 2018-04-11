@@ -36,11 +36,8 @@ public class AssignChannelMessage extends AbstractAntMessage implements AntBlock
 		ByteArrayBuilder bb = new ByteArrayBuilder()
 				.write(channelNumber)
 				.write(channelType)
-				.write(networkNumber);
-
-		if (extendedAssignment != null) {
-			bb.write(extendedAssignment);
-		}
+				.write(networkNumber)
+				.write(extendedAssignment == null ? 0x00 : extendedAssignment);
 
 		return bb.toByteArray();
 	}
@@ -48,6 +45,6 @@ public class AssignChannelMessage extends AbstractAntMessage implements AntBlock
 	@Override
 	public void setMessageBytes(byte[] messageContentBytes) throws AntException {
 		// TODO Auto-generated method stub
-		
+
 	}
 }
