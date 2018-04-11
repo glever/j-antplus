@@ -4,13 +4,18 @@ import be.glever.ant.AntException;
 import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
 import be.glever.ant.message.configuration.*;
 import be.glever.ant.message.control.*;
+import be.glever.ant.message.data.nonimplemented.BroadcastDataMessage;
 import be.glever.ant.message.notification.SerialErrorMessage;
 import be.glever.ant.message.notification.StartupNotificationMessage;
-import be.glever.ant.message.requestedresponse.*;
+import be.glever.ant.message.requestedresponse.AntVersionMessage;
+import be.glever.ant.message.requestedresponse.CapabilitiesResponseMessage;
+import be.glever.ant.message.requestedresponse.ChannelStatusMessage;
+import be.glever.ant.message.requestedresponse.SerialNumberMessage;
 import be.glever.ant.util.ByteUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +49,7 @@ public class AntMessageRegistry {
 		// notification
 		add(StartupNotificationMessage.class);
 		add(SerialErrorMessage.class);
+		add(BroadcastDataMessage.class);
 
 		// requested response
 		add(AntVersionMessage.class);
@@ -96,8 +102,8 @@ public class AntMessageRegistry {
 
 	private static AntMessage instantiate(Class<? extends AbstractAntMessage> msgImplClass) {
 		try {
-			return msgImplClass.newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
+			return msgImplClass.getDeclaredConstructor().newInstance();
+		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
 			throw new IllegalStateException("Initialization Error. Could not call default constructor on class ["
 					+ msgImplClass.getName() + "]");
 		}

@@ -2,6 +2,8 @@ package be.glever.ant.message.data.nonimplemented;
 
 import be.glever.ant.AntException;
 import be.glever.ant.message.AbstractAntMessage;
+import be.glever.antplus.common.DataPageRegistry;
+import be.glever.antplus.common.datapage.AbstractAntPlusDataPage;
 
 /**
  * Base class for all broadcast messages (ie data payloads received from ant+ devices).
@@ -23,5 +25,9 @@ public class BroadcastDataMessage extends AbstractAntMessage {
 	@Override
 	public byte getMessageId() {
 		return 0x4e;
+	}
+
+	public AbstractAntPlusDataPage getDataPage() {
+		return DataPageRegistry.createDataPage(messageContentBytes);
 	}
 }
