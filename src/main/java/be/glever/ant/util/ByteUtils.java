@@ -11,11 +11,16 @@ public class ByteUtils {
 	}
 
 	public static String hexString(byte[] bytes) {
-		StringBuilder sb = new StringBuilder(4 * bytes.length);
+		StringBuilder sb = new StringBuilder(3 * bytes.length);
+
+		boolean first = true;
 		for (byte bite : bytes) {
-			sb.append('[');
-			sb.append(Integer.toHexString(bite & 0xFF));
-			sb.append(']');
+			if (first) {
+				first = false;
+			} else {
+				sb.append('-');
+			}
+			sb.append(String.format("%02X", (0xFF & bite)));
 		}
 		return sb.toString();
 	}
