@@ -2,9 +2,9 @@ package be.glever.antplus.hrm.datapage.background;
 
 import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
 
-public class DataPage3ProductInformation extends AbstractHRMDataPage {
+public class HrmDataPage3ProductInformation extends AbstractHRMDataPage {
 
-	public DataPage3ProductInformation(byte[] dataPageBytes) {
+	public HrmDataPage3ProductInformation(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
@@ -21,7 +21,7 @@ public class DataPage3ProductInformation extends AbstractHRMDataPage {
 	}
 
 	@Override
-	public int getPageNumber() {
+	public byte getPageNumber() {
 		return 0x3;
 	}
 }

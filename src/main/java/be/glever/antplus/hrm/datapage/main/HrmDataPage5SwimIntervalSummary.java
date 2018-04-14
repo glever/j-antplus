@@ -4,9 +4,9 @@ import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
 
 import static be.glever.ant.util.ByteUtils.toInt;
 
-public class DataPage5SwimIntervalSummary extends AbstractHRMDataPage {
+public class HrmDataPage5SwimIntervalSummary extends AbstractHRMDataPage {
 
-	public DataPage5SwimIntervalSummary(byte[] dataPageBytes) {
+	public HrmDataPage5SwimIntervalSummary(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
@@ -32,7 +32,7 @@ public class DataPage5SwimIntervalSummary extends AbstractHRMDataPage {
 	}
 
 	@Override
-	public int getPageNumber() {
+	public byte getPageNumber() {
 		return 5;
 	}
 }

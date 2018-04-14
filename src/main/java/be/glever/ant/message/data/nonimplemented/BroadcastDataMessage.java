@@ -2,7 +2,7 @@ package be.glever.ant.message.data.nonimplemented;
 
 import be.glever.ant.AntException;
 import be.glever.ant.message.AbstractAntMessage;
-import be.glever.antplus.common.DataPageRegistry;
+import be.glever.antplus.common.datapage.registry.CommonDataPageRegistry;
 import be.glever.antplus.common.datapage.AbstractAntPlusDataPage;
 
 /**
@@ -28,6 +28,6 @@ public class BroadcastDataMessage extends AbstractAntMessage {
 	}
 
 	public AbstractAntPlusDataPage getDataPage() {
-		return DataPageRegistry.createDataPage(messageContentBytes);
+		return CommonDataPageRegistry.createDataPage(messageContentBytes);
 	}
 }

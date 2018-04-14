@@ -2,9 +2,9 @@ package be.glever.antplus.hrm.datapage.background;
 
 import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
 
-public class DataPage1CumulativeOperatingTime extends AbstractHRMDataPage {
+public class HrmDataPage1CumulativeOperatingTime extends AbstractHRMDataPage {
 
-	public DataPage1CumulativeOperatingTime(byte[] dataPageBytes) {
+	public HrmDataPage1CumulativeOperatingTime(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
@@ -18,7 +18,7 @@ public class DataPage1CumulativeOperatingTime extends AbstractHRMDataPage {
 	}
 
 	@Override
-	public int getPageNumber() {
+	public byte getPageNumber() {
 		return 0x1;
 	}
 }

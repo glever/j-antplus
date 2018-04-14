@@ -7,9 +7,9 @@ import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
  * On of the main HRM DataPages. For non-swimming hrm probably THE main DataPage.
  * Adds the previous Heart Beat time to the datapage.
  */
-public class DataPage4PreviousHeartBeatEvent extends AbstractHRMDataPage {
+public class HrmDataPage4PreviousHeartBeatEvent extends AbstractHRMDataPage {
 
-	public DataPage4PreviousHeartBeatEvent(byte[] dataPageBytes) {
+	public HrmDataPage4PreviousHeartBeatEvent(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
@@ -23,7 +23,7 @@ public class DataPage4PreviousHeartBeatEvent extends AbstractHRMDataPage {
 	}
 
 	@Override
-	public int getPageNumber() {
+	public byte getPageNumber() {
 		return 4;
 	}
 }

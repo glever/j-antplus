@@ -1,20 +1,22 @@
 package be.glever.antplus.hrm.datapage.background;
 
 import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
+import be.glever.antplus.hrm.datapage.main.HrmDataPage4PreviousHeartBeatEvent;
+import be.glever.antplus.hrm.datapage.main.HrmDataPage5SwimIntervalSummary;
 
 /**
  * Lists supported capabilities for running/cycling/swimming and if they are enabled.
- * In case this capability is enabled its' specific datapage is transmitted as main datapage instead of the generic {@link be.glever.antplus.hrm.datapage.main.DataPage4PreviousHeartBeatEvent}
- * Currently only swimming seems to be possible ({@link be.glever.antplus.hrm.datapage.main.DataPage5SwimIntervalSummary}).
+ * In case this capability is enabled its' specific datapage is transmitted as main datapage instead of the generic {@link HrmDataPage4PreviousHeartBeatEvent}
+ * Currently only swimming seems to be possible ({@link HrmDataPage5SwimIntervalSummary}).
  */
-public class DataPage6Capabilities extends AbstractHRMDataPage {
+public class HrmDataPage6Capabilities extends AbstractHRMDataPage {
 
-	public DataPage6Capabilities(byte[] dataPageBytes) {
+	public HrmDataPage6Capabilities(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
 	@Override
-	public int getPageNumber() {
+	public byte getPageNumber() {
 		return 6;
 	}
 

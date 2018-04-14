@@ -7,15 +7,15 @@ import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
  * Used in transmission control patterns.
  * Contains no useful extra info over the generic {@link AbstractHRMDataPage}
  */
-public class DataPage0Default extends AbstractHRMDataPage {
+public class HrmDataPage0Default extends AbstractHRMDataPage {
 
 
-	public DataPage0Default(byte[] dataPageBytes) {
+	public HrmDataPage0Default(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
 	@Override
-	public int getPageNumber() {
+	public byte getPageNumber() {
 		return 0x0;
 	}
 }
