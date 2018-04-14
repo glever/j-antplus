@@ -3,7 +3,7 @@ package be.glever.ant.message.channel;
 public enum ChannelEventResponseCode {
 	RESPONSE_NO_ERROR((byte) 0x00),
 	EVENT_RX_SEARCH_TIMEOUT((byte) 0x01),
-	EVENT_RX_FAIL((byte) 0x01),
+	EVENT_RX_FAIL((byte) 0x02),
 	EVENT_TX((byte) 0x03),
 	EVENT_TRANSFER_RX_FAILED((byte) 0x04),
 	EVENT_TRANSFER_TX_COMPLETED((byte) 0x05),
