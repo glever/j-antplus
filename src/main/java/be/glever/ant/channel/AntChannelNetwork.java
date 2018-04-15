@@ -3,31 +3,28 @@ package be.glever.ant.channel;
 import be.glever.ant.constants.AntNetworkKeys;
 
 public class AntChannelNetwork {
-	private byte number = 0;
-	private byte[] keyBytes;
+	private byte networkNumber;
+	private byte[] networkKey;
 
-	public AntChannelNetwork() {
+	public AntChannelNetwork(byte networkNumber, AntNetworkKeys key) {
+		this.networkNumber = networkNumber;
+		this.networkKey = key.getBytes();
 	}
 
-	public AntChannelNetwork(byte number, AntNetworkKeys key) {
-		this.number = number;
-		this.keyBytes = key.getBytes();
+	public byte getNetworkNumber() {
+		return networkNumber;
 	}
 
-	public byte getNumber() {
-		return number;
+	public void setNetworkNumber(byte networkNumber) {
+		this.networkNumber = networkNumber;
 	}
 
-	public void setNumber(byte number) {
-		this.number = number;
+	public byte[] getNetworkKey() {
+		return networkKey;
 	}
 
-	public byte[] getKeyBytes() {
-		return keyBytes;
-	}
-
-	public void setKeyBytes(byte[] keyBytes) {
-		this.keyBytes = keyBytes;
+	public void setNetworkKey(byte[] networkKey) {
+		this.networkKey = networkKey;
 	}
 
 }

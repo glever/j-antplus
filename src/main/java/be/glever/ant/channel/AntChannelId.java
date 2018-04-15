@@ -6,12 +6,12 @@ public class AntChannelId {
 
 	private AntChannelTransmissionType transmissionType;
 	private byte deviceType; // set by master device, 0 for slave devices. TODO MSB is a pairing bit. split device type from pairing bit?
-	private AntDeviceNumber deviceNumber; // TODO remember this is little endian
+	private byte[] deviceNumber; // TODO remember this is little endian
 
 	public AntChannelId() {
 	}
 
-	public AntChannelId(AntChannelTransmissionType transmissionType, AntPlusDeviceType deviceType, AntDeviceNumber deviceNumber) {
+	public AntChannelId(AntChannelTransmissionType transmissionType, AntPlusDeviceType deviceType, byte[] deviceNumber) {
 		this.transmissionType = transmissionType;
 		this.deviceType = deviceType.value();
 		this.deviceNumber = deviceNumber;
@@ -33,11 +33,11 @@ public class AntChannelId {
 		this.deviceType = deviceType;
 	}
 
-	public AntDeviceNumber getDeviceNumber() {
+	public byte[] getDeviceNumber() {
 		return deviceNumber;
 	}
 
-	public void setDeviceNumber(AntDeviceNumber deviceNumber) {
+	public void setDeviceNumber(byte[] deviceNumber) {
 		this.deviceNumber = deviceNumber;
 	}
 

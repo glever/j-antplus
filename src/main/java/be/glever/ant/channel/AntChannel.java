@@ -1,12 +1,13 @@
 package be.glever.ant.channel;
 
 import be.glever.ant.constants.AntChannelType;
+import be.glever.ant.message.AntMessage;
 
 public class AntChannel {
-	private AntChannelType channelType;
-	private AntChannelRfFrequency rfFrequency;
 	private AntChannelId channelId;
-	private AntChannelPeriod channelPeriod;
+	private AntChannelType channelType;
+	private byte rfFrequency;
+	private byte[] channelPeriod;
 	private AntChannelNetwork network;
 
 
@@ -24,12 +25,16 @@ public class AntChannel {
 	}
 
 
-	public AntChannelRfFrequency getRfFrequency() {
+	public byte getRfFrequency() {
 		return rfFrequency;
 	}
 
 
-	public void setRfFrequency(AntChannelRfFrequency rfFrequency) {
+	public void setRfFrequency(byte rfFrequency) {
+		if (rfFrequency < 0 || rfFrequency > 124) {
+			throw new IllegalArgumentException(
+					"Invalid frequency value: [" + rfFrequency + "]. Must lie within 0-124 (inclusive)");
+		}
 		this.rfFrequency = rfFrequency;
 	}
 
@@ -44,12 +49,12 @@ public class AntChannel {
 	}
 
 
-	public AntChannelPeriod getChannelPeriod() {
+	public byte[] getChannelPeriod() {
 		return channelPeriod;
 	}
 
 
-	public void setChannelPeriod(AntChannelPeriod channelPeriod) {
+	public void setChannelPeriod(byte[] channelPeriod) {
 		this.channelPeriod = channelPeriod;
 	}
 
@@ -63,4 +68,7 @@ public class AntChannel {
 		this.network = network;
 	}
 
+	public void notify(AntMessage msg) {
+
+	}
 }

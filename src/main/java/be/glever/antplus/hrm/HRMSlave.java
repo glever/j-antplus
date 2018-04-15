@@ -27,7 +27,7 @@ public class HRMSlave {
 		byte channelNumber = 0x00;
 
 		// ASSIGN CHANNEL
-		NetworkKeyMessage networkKeyMessage = new NetworkKeyMessage(channelNumber, channel.getNetwork().getKeyBytes());
+		NetworkKeyMessage networkKeyMessage = new NetworkKeyMessage(channelNumber, channel.getNetwork().getNetworkKey());
 		ChannelEventOrResponseMessage setNetworkKeyResponse = (ChannelEventOrResponseMessage) antUsbDevice.sendMessage(networkKeyMessage).get();
 		if (setNetworkKeyResponse.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
 			throw new RuntimeException("Could not set network key");
@@ -60,6 +60,7 @@ public class HRMSlave {
 		if (response.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
 			throw new RuntimeException("Could not open channel");
 		}
+
 
 		// OPEN CHANNEL
 		return null;

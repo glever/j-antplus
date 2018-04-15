@@ -57,7 +57,7 @@ public class AntPlusDeviceScanner {
 
 	public void openRxScanMode() throws AntException, ExecutionException, InterruptedException {
 		HRMChannel channel = new HRMChannel();
-		AssignChannelMessage assignChannelMessage = new AssignChannelMessage((byte)0x00, channel.getChannelType().getValue(), channel.getNetwork().getNumber());
+		AssignChannelMessage assignChannelMessage = new AssignChannelMessage((byte)0x00, channel.getChannelType().getValue(), channel.getNetwork().getNetworkNumber());
 		if( ((ChannelEventOrResponseMessage)antUsbDevice.sendMessage(assignChannelMessage).get()).getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR){
 			throw new RuntimeException("Could not assign channel");
 		}

@@ -1,8 +1,10 @@
-package be.glever.ant.message.data.nonimplemented;
+package be.glever.ant.message.data;
 
 import be.glever.ant.AntException;
 import be.glever.ant.message.AbstractAntMessage;
 import be.glever.ant.util.ByteUtils;
+
+import java.util.Arrays;
 
 /**
  * Base class for all broadcast messages (ie data payloads received from ant+ devices).
@@ -26,10 +28,20 @@ public class BroadcastDataMessage extends AbstractAntMessage {
 		return 0x4e;
 	}
 
+	public byte getChannelNumber() {
+		return getMessageContent()[0];
+	}
+
+	public byte[] getPayLoad() {
+		return Arrays.copyOfRange(messageContentBytes, 1, messageContentBytes.length);
+	}
+
 	@Override
 	public String toString() {
 		return "BroadcastDataMessage{" +
 				"messageContentBytes=" + ByteUtils.hexString(messageContentBytes) +
 				'}';
 	}
+
+
 }

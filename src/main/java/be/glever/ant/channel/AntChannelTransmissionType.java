@@ -45,4 +45,8 @@ public class AntChannelTransmissionType {
 		byte NOT_USED = 0;
 		byte USED = 1;
 	}
+
+	public byte getValue() {
+		return value;
+	}
 }

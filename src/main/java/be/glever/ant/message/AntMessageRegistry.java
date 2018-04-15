@@ -4,7 +4,7 @@ import be.glever.ant.AntException;
 import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
 import be.glever.ant.message.configuration.*;
 import be.glever.ant.message.control.*;
-import be.glever.ant.message.data.nonimplemented.BroadcastDataMessage;
+import be.glever.ant.message.data.BroadcastDataMessage;
 import be.glever.ant.message.notification.SerialErrorMessage;
 import be.glever.ant.message.notification.StartupNotificationMessage;
 import be.glever.ant.message.requestedresponse.AntVersionMessage;
