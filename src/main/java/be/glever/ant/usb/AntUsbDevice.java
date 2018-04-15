@@ -201,6 +201,7 @@ public class AntUsbDevice implements Closeable {
 
 	private void initAntDevice() throws AntException, InterruptedException, ExecutionException {
 		resetUsbDevice();
+		antMessageUsbReader.startProcessing();
 
 		CompletableFuture<AntMessage> capabilitiesFuture = sendMessage(createRequestMessage(CapabilitiesResponseMessage.MSG_ID));
 		this.capabilities = new AntUsbDeviceCapabilities((CapabilitiesResponseMessage) capabilitiesFuture.get());
