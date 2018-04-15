@@ -161,6 +161,7 @@ public class AntUsbDevice implements Closeable {
 		sendChannelConfigMessage(new ChannelRfFrequencyMessage(channelNumber, channel.getRfFrequency()), "Could not set rf frequency");
 		sendChannelConfigMessage(new OpenChannelMessage(channelNumber), "Could not open channel");
 
+		this.antChannels[channelNumber] = channel;
 	}
 
 	public Byte getAvailableChannelNumber() {
@@ -279,7 +280,7 @@ public class AntUsbDevice implements Closeable {
 		private void notifyChannel(byte channelNumber, AntMessage msg) {
 			AntChannel antChannel = getAntChannel(channelNumber);
 			if (antChannel != null) {
-				antChannel.notify(msg);
+				antChannel.handle(msg);
 			}
 		}
 

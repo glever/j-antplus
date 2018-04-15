@@ -1,13 +1,15 @@
 package be.glever.antplus.common.datapage;
 
 public class DataPage82BatteryStatus extends AbstractAntPlusDataPage {
+	public static final byte PAGE_NR = 82;
+
 	public DataPage82BatteryStatus(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
 	@Override
 	public byte getPageNumber() {
-		return 82;
+		return PAGE_NR;
 	}
 
 

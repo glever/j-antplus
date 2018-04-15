@@ -9,6 +9,8 @@ import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
  */
 public class HrmDataPage4PreviousHeartBeatEvent extends AbstractHRMDataPage {
 
+	public static final byte PAGE_NR = 4;
+
 	public HrmDataPage4PreviousHeartBeatEvent(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
@@ -24,6 +26,6 @@ public class HrmDataPage4PreviousHeartBeatEvent extends AbstractHRMDataPage {
 
 	@Override
 	public byte getPageNumber() {
-		return 4;
+		return PAGE_NR;
 	}
 }

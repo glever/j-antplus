@@ -68,7 +68,7 @@ public class MessageBus<T> implements Closeable {
 	 * </ul>
 	 *
 	 * @param listener
-	 *            The listener to notify of events.
+	 *            The listener to handle of events.
 	 * @param timeout
 	 *            Time to wait for messages. Negative values mean indefinite.
 	 * @param nrMessages

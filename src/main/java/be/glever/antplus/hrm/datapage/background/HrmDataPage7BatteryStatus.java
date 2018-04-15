@@ -5,6 +5,8 @@ import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
 import static be.glever.ant.util.ByteUtils.toInt;
 
 public class HrmDataPage7BatteryStatus extends AbstractHRMDataPage {
+	public static final byte PAGE_NR = 7;
+
 	enum ANT_HRM_BATTERY_LEVEL {
 		RESERVED,
 		NEW,
@@ -21,7 +23,7 @@ public class HrmDataPage7BatteryStatus extends AbstractHRMDataPage {
 
 	@Override
 	public byte getPageNumber() {
-		return 7;
+		return PAGE_NR;
 	}
 
 	/**

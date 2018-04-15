@@ -4,6 +4,8 @@ import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
 
 public class HrmDataPage3ProductInformation extends AbstractHRMDataPage {
 
+	public static final byte PAGE_NR = 0x3;
+
 	public HrmDataPage3ProductInformation(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
@@ -22,6 +24,6 @@ public class HrmDataPage3ProductInformation extends AbstractHRMDataPage {
 
 	@Override
 	public byte getPageNumber() {
-		return 0x3;
+		return PAGE_NR;
 	}
 }

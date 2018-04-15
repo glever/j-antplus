@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public abstract class AbstractDataPageRegistry {
 
-	private Map<Byte, Class<? extends AbstractAntPlusDataPage>> registry = new HashMap<>();
+	private Map<Byte, DataPageBuilder> registry = new HashMap<>();
 
 	public AbstractDataPageRegistry() {
 	}
@@ -25,35 +25,23 @@ public abstract class AbstractDataPageRegistry {
 	}
 
 	private void addAllFromRegistry(AbstractDataPageRegistry src) {
-		for (Class<? extends AbstractAntPlusDataPage> registryClass : src.registry.values()) {
-			add(registryClass);
+		for (Map.Entry<Byte, DataPageBuilder> entry : src.registry.entrySet()) {
+			add(entry.getKey(), entry.getValue());
 		}
 	}
 
-
-	public AbstractAntPlusDataPage createDataPage(byte[] messageContentBytes) {
-		try {
-			return get(messageContentBytes[0]).getDeclaredConstructor().newInstance(messageContentBytes);
-		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-			throw new IllegalStateException("Could not instantiate DataPage");
-		}
+	public AbstractAntPlusDataPage constructDataPage(byte[] payLoadBytes) {
+		return registry.get(payLoadBytes[0]).construct(payLoadBytes);
 	}
 
-	public Class<? extends AbstractAntPlusDataPage> get(byte dataPageNumber) {
-		return registry.get(dataPageNumber);
+	protected void add(byte pageNumber, DataPageBuilder builder) {
+		if (this.registry.containsKey(pageNumber)) {
+			throw new IllegalStateException("Duplicate DataPage defined in registry: " + pageNumber);
+		}
+		this.registry.put(pageNumber, builder);
 	}
 
-	protected void add(Class<? extends AbstractAntPlusDataPage> dataPageClass) {
-		try {
-			byte pageNumber = dataPageClass.getDeclaredConstructor().newInstance().getPageNumber();
-			if (this.registry.containsKey(pageNumber)) {
-				throw new IllegalStateException("Duplicate DataPage defined in registry: " + pageNumber);
-			}
-
-			this.registry.put(pageNumber, dataPageClass);
-		} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-			throw new IllegalStateException("Initialization Error. Could not call default constructor on class ["
-					+ dataPageClass.getName() + "]");
-		}
+	public static interface DataPageBuilder{
+		AbstractAntPlusDataPage construct(byte[] bytes);
 	}
 }

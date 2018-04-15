@@ -1,13 +1,15 @@
 package be.glever.antplus.common.datapage;
 
 public class DataPage78MultiComponentSystemManufacturersInformation extends AbstractAntPlusDataPage {
+	public static final byte PAGE_NR = 78;
+
 	public DataPage78MultiComponentSystemManufacturersInformation(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
 	@Override
 	public byte getPageNumber() {
-		return 78;
+		return PAGE_NR;
 	}
 
 	public byte getComponentIdentifier() {

@@ -1,13 +1,15 @@
 package be.glever.antplus.common.datapage;
 
 public class DataPage84SubfieldData extends AbstractAntPlusDataPage {
+	public static final byte PAGE_NR = 84;
+
 	public DataPage84SubfieldData(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
 	@Override
 	public byte getPageNumber() {
-		return 84;
+		return PAGE_NR;
 	}
 
 

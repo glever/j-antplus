@@ -1,13 +1,15 @@
 package be.glever.antplus.common.datapage;
 
 public class DataPage83TimeAndDate extends AbstractAntPlusDataPage {
+	public static final byte PAGE_NR = 83;
+
 	public DataPage83TimeAndDate(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
 	@Override
 	public byte getPageNumber() {
-		return 83;
+		return PAGE_NR;
 	}
 
 	public byte getSeconds() {

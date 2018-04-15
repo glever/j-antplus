@@ -1,13 +1,15 @@
 package be.glever.antplus.common.datapage;
 
 public class DataPage86GetPairedDevices extends AbstractAntPlusDataPage {
+	public static final byte PAGE_NR = 86;
+
 	public DataPage86GetPairedDevices(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
 	@Override
 	public byte getPageNumber() {
-		return 86;
+		return PAGE_NR;
 	}
 
 

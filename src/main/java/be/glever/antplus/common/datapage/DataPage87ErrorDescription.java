@@ -1,13 +1,15 @@
 package be.glever.antplus.common.datapage;
 
 public class DataPage87ErrorDescription extends AbstractAntPlusDataPage {
+	public static final byte PAGE_NR = 87;
+
 	public DataPage87ErrorDescription(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
 	@Override
 	public byte getPageNumber() {
-		return 87;
+		return PAGE_NR;
 	}
 
 

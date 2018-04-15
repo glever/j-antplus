@@ -1,13 +1,15 @@
 package be.glever.antplus.common.datapage;
 
 public class DataPage74OpenChannelCommand extends AbstractAntPlusDataPage {
+	public static final byte PAGE_NR = 74;
+
 	public DataPage74OpenChannelCommand(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
 	@Override
 	public byte getPageNumber() {
-		return 74;
+		return PAGE_NR;
 	}
 
 	public byte[] getLower3BytesOfSerialNumber() {

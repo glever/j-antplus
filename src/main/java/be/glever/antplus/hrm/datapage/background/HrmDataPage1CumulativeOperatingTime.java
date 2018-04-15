@@ -4,6 +4,8 @@ import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
 
 public class HrmDataPage1CumulativeOperatingTime extends AbstractHRMDataPage {
 
+	public static final byte PAGE_NR = 0x1;
+
 	public HrmDataPage1CumulativeOperatingTime(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
@@ -19,6 +21,6 @@ public class HrmDataPage1CumulativeOperatingTime extends AbstractHRMDataPage {
 
 	@Override
 	public byte getPageNumber() {
-		return 0x1;
+		return PAGE_NR;
 	}
 }

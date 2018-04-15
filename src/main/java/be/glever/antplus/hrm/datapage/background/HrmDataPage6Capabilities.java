@@ -11,13 +11,15 @@ import be.glever.antplus.hrm.datapage.main.HrmDataPage5SwimIntervalSummary;
  */
 public class HrmDataPage6Capabilities extends AbstractHRMDataPage {
 
+	public static final byte PAGE_NR = 6;
+
 	public HrmDataPage6Capabilities(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
 	@Override
 	public byte getPageNumber() {
-		return 6;
+		return PAGE_NR;
 	}
 
 	public boolean isExtendedRunningFeatureSupported() {

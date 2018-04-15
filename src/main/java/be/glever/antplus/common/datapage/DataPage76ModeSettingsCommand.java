@@ -1,8 +1,8 @@
 package be.glever.antplus.common.datapage;
 
-import be.glever.antplus.common.datapage.AbstractAntPlusDataPage;
-
 public class DataPage76ModeSettingsCommand extends AbstractAntPlusDataPage {
+
+	public static final byte PAGE_NR = 76;
 
 	public enum SPORT_MODE {
 		RUNNING, CYCLING, SWIMMING;
@@ -48,6 +48,6 @@ public class DataPage76ModeSettingsCommand extends AbstractAntPlusDataPage {
 
 	@Override
 	public byte getPageNumber() {
-		return 76;
+		return PAGE_NR;
 	}
 }

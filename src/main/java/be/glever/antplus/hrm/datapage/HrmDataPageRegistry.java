@@ -12,14 +12,14 @@ public class HrmDataPageRegistry extends AbstractDataPageRegistry {
 		super(new CommonDataPageRegistry());
 
 		// add hrm specific datapages here
-		add(HrmDataPage0Default.class);
-		add(HrmDataPage4PreviousHeartBeatEvent.class);
-		add(HrmDataPage5SwimIntervalSummary.class);
+		add(HrmDataPage0Default.PAGE_NR, HrmDataPage0Default::new);
+		add(HrmDataPage4PreviousHeartBeatEvent.PAGE_NR, HrmDataPage4PreviousHeartBeatEvent::new);
+		add(HrmDataPage5SwimIntervalSummary.PAGE_NR, HrmDataPage5SwimIntervalSummary::new);
 
-		add(HrmDataPage1CumulativeOperatingTime.class);
-		add(HrmDataPage2ManufacturerInformation.class);
-		add(HrmDataPage3ProductInformation.class);
-		add(HrmDataPage6Capabilities.class);
-		add(HrmDataPage7BatteryStatus.class);
+		add(HrmDataPage1CumulativeOperatingTime.PAGE_NR, HrmDataPage1CumulativeOperatingTime::new);
+		add(HrmDataPage2ManufacturerInformation.PAGE_NR, HrmDataPage2ManufacturerInformation::new);
+		add(HrmDataPage3ProductInformation.PAGE_NR, HrmDataPage3ProductInformation::new);
+		add(HrmDataPage6Capabilities.PAGE_NR, HrmDataPage6Capabilities::new);
+		add(HrmDataPage7BatteryStatus.PAGE_NR, HrmDataPage7BatteryStatus::new);
 	}
 }

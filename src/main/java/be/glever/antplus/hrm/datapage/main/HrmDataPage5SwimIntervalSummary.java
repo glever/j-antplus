@@ -6,6 +6,8 @@ import static be.glever.ant.util.ByteUtils.toInt;
 
 public class HrmDataPage5SwimIntervalSummary extends AbstractHRMDataPage {
 
+	public static final byte PAGE_NR = 5;
+
 	public HrmDataPage5SwimIntervalSummary(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
@@ -33,6 +35,6 @@ public class HrmDataPage5SwimIntervalSummary extends AbstractHRMDataPage {
 
 	@Override
 	public byte getPageNumber() {
-		return 5;
+		return PAGE_NR;
 	}
 }

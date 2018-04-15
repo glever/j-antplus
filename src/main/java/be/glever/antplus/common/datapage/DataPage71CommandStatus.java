@@ -3,13 +3,15 @@ package be.glever.antplus.common.datapage;
 import java.util.Arrays;
 
 public class DataPage71CommandStatus extends AbstractAntPlusDataPage {
+	public static final byte PAGE_NR = 71;
+
 	public DataPage71CommandStatus(byte[] dataPageBytes) {
 		super(dataPageBytes);
 	}
 
 	@Override
 	public byte getPageNumber() {
-		return 71;
+		return PAGE_NR;
 	}
 
 

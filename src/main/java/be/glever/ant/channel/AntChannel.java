@@ -3,12 +3,16 @@ package be.glever.ant.channel;
 import be.glever.ant.constants.AntChannelType;
 import be.glever.ant.message.AntMessage;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AntChannel {
 	private AntChannelId channelId;
 	private AntChannelType channelType;
 	private byte rfFrequency;
 	private byte[] channelPeriod;
 	private AntChannelNetwork network;
+	private List<AntChannelListener> antChannelListeners = new ArrayList<>();
 
 
 	public AntChannel() {
@@ -68,7 +72,15 @@ public class AntChannel {
 		this.network = network;
 	}
 
-	public void notify(AntMessage msg) {
+	public void handle(AntMessage msg) {
+		antChannelListeners.stream().forEach(listener -> listener.handle(msg));
+	}
 
+	public void addListener(AntChannelListener listener) {
+		antChannelListeners.add(listener);
+	}
+
+	public void removeListener(AntChannelListener listener) {
+		antChannelListeners.remove(listener);
 	}
 }
