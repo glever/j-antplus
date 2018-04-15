@@ -108,7 +108,7 @@ public class AntUsbDevice implements Closeable {
 		try {
 			resetUsbDevice();
 		} catch (Exception e) {
-			LOG.error("Reset failed. Continuing .", e);
+			LOG.error("Reset ant stick failed. Continuing with shutdown of usb interface.", e);
 		}
 
 		try {
