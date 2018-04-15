@@ -24,7 +24,11 @@ public abstract class AbstractHRMDataPage extends AbstractAntPlusDataPage {
 	 * so the  value rolls over at 63.999 seconds ( ((1/1024)*(2^17)) - (1/1024)) ).
 	 */
 	public int getHeartBeatEventTime() {
-		int timeAnt = ByteUtils.toInt(getDataPageBytes()[4], getDataPageBytes()[5]);
+		return calculateHeartBeatEventTime(getDataPageBytes()[4], getDataPageBytes()[5]);
+	}
+
+	protected int calculateHeartBeatEventTime(byte bite1, byte bite2){
+		int timeAnt = ByteUtils.fromUShort(bite1, bite2);
 		return (timeAnt * 1024) / 1000;
 	}
 
@@ -33,7 +37,7 @@ public abstract class AbstractHRMDataPage extends AbstractAntPlusDataPage {
 	 * Ant+ field size is 1 byte so rollover = 256.
 	 */
 	public int getHeartBeatCount() {
-		return getDataPageBytes()[6];
+		return 0xFF & getDataPageBytes()[6];
 	}
 
 	/**
@@ -41,6 +45,14 @@ public abstract class AbstractHRMDataPage extends AbstractAntPlusDataPage {
 	 * @return The heart rate computed by device or -1 if invalid.
 	 */
 	public int getComputedHeartRateInBpm() {
-		return getDataPageBytes()[7];
+		return 0xFF &  getDataPageBytes()[7];
 	}
+
+	protected String getToString() {
+		return "heartBeatEventTime=" + getHeartBeatEventTime()
+				+ ",heartBeatCount=" + getHeartBeatCount()
+				+ ",computedHeartRateInBpm=" + getComputedHeartRateInBpm();
+	}
+
+
 }

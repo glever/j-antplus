@@ -1,6 +1,10 @@
 package be.glever.ant.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ByteUtils {
+	private static final Logger LOG = LoggerFactory.getLogger(ByteUtils.class);
 
 	public static String binaryString(byte[] bytes) {
 		StringBuilder sb = new StringBuilder(8 * bytes.length);
@@ -59,5 +63,11 @@ public class ByteUtils {
 		ret[0] = (byte) val;
 		ret[1] = (byte) (val >> 8);
 		return ret;
+	}
+
+	public static int fromUShort(byte bite0, byte bite1) {
+		int val =  (0xFF & bite0) | ((0xFF & bite1) << 8);
+		LOG.info("Converted {} to {}", ByteUtils.hexString(new byte[]{bite0, bite1}), val);
+		return val;
 	}
 }

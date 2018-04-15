@@ -1,6 +1,5 @@
 package be.glever.antplus.hrm.datapage.main;
 
-import be.glever.ant.util.ByteUtils;
 import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
 
 /**
@@ -19,13 +18,16 @@ public class HrmDataPage4PreviousHeartBeatEvent extends AbstractHRMDataPage {
 	 * Similar to {@link AbstractHRMDataPage#getHeartBeatEventTime()}, but for previous heart beat. Provides level of redundancy.
 	 */
 	public int getPreviousHeartBeatEventTime() {
-		// byte 0 is manufacturer specific and must be ignored by receiver.
-		int prevTimeAnt = ByteUtils.toInt(getPageSpecificBytes()[1], getPageSpecificBytes()[2]);
-		return (prevTimeAnt * 1024) / 1000;
+		return calculateHeartBeatEventTime(getPageSpecificBytes()[1], getPageSpecificBytes()[2]);
 	}
 
 	@Override
 	public byte getPageNumber() {
 		return PAGE_NR;
+	}
+
+	@Override
+	public String toString() {
+		return "HrmDataPage4PreviousHeartBeatEvent{" + super.getToString() + ",previousEventTime=" + getPreviousHeartBeatEventTime() + "}";
 	}
 }

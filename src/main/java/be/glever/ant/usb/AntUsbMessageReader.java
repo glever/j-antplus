@@ -20,6 +20,7 @@ import javax.usb.util.DefaultUsbIrp;
  */
 public class AntUsbMessageReader implements Runnable {
 	private static final Logger LOG = LoggerFactory.getLogger(AntUsbMessageReader.class);
+	public static final byte SYNC = (byte) 0xa4;
 	private UsbPipe inPipe;
 	private boolean stop = false;
 	private MessageBus<AntMessage> messageBus;
@@ -33,9 +34,9 @@ public class AntUsbMessageReader implements Runnable {
 	@Override
 	public void run() {
 		runningThread = Thread.currentThread();
+		byte[] buffer = new byte[128];
 		while (!stop) {
 			try {
-				byte[] buffer = new byte[128];
 				DefaultUsbIrp irp = new DefaultUsbIrp(buffer);
 				irp.waitUntilComplete(100);
 				inPipe.syncSubmit(irp);
@@ -49,8 +50,13 @@ public class AntUsbMessageReader implements Runnable {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Read {} bytes", ByteUtils.hexString(buffer));
 					}
+					if(buffer[0] ==  SYNC){
+						messageBus.put(AntMessageRegistry.from(buffer));
+					}else{
+						// if this happens too much, treat buffer as 'sliding window' instead of only relying on first byte
+						LOG.warn("Buffer{} didn't start with sync byte. Ignoring...", ByteUtils.hexString(buffer));
+					}
 
-					messageBus.put(AntMessageRegistry.from(buffer));
 				}
 			} catch (Throwable t) {
 				if (!stop) {

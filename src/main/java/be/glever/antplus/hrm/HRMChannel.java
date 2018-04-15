@@ -9,6 +9,7 @@ import be.glever.ant.message.data.BroadcastDataMessage;
 import be.glever.ant.util.ByteUtils;
 import be.glever.antplus.common.datapage.AbstractAntPlusDataPage;
 import be.glever.antplus.hrm.datapage.HrmDataPageRegistry;
+import be.glever.antplus.hrm.datapage.main.HrmDataPage4PreviousHeartBeatEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,10 @@ public class HRMChannel extends AntChannel implements AntChannelListener {
 	byte[] CHANNEL_PERIOD = ByteUtils.toUShort(8070);
 	public static final byte DEFAULT_PUBLIC_NETWORK = 0x00;
 	private HrmDataPageRegistry registry = new HrmDataPageRegistry();
+
+	// todo doesnt belong here
+	private int heartbeatCount;
+	private int heartBeatEventTime;
 
 	/**
 	 * Pair with any (the first found) HRM.
@@ -50,8 +55,26 @@ public class HRMChannel extends AntChannel implements AntChannelListener {
 			AbstractAntPlusDataPage dataPage = registry.constructDataPage(payLoad);
 
 			LOG.debug("Received datapage " + dataPage.toString());
-
+			if (dataPage instanceof HrmDataPage4PreviousHeartBeatEvent) {
+				calStats((HrmDataPage4PreviousHeartBeatEvent) dataPage);
+			}
 		}
+	}
+
+	// TODO responsibility of client
+	private void calStats(HrmDataPage4PreviousHeartBeatEvent dataPage) {
+		if (this.heartbeatCount != dataPage.getHeartBeatCount()) {
+			this.heartbeatCount = dataPage.getHeartBeatCount();
+			int prevTime = dataPage.getPreviousHeartBeatEventTime();
+			int curTime = dataPage.getHeartBeatEventTime() > prevTime ? dataPage.getHeartBeatEventTime() : addRolloverTime(dataPage.getHeartBeatEventTime());
+
+			LOG.info("HEARTBEAT {curTime={}, prevTime={}, delta = {}}", curTime, prevTime, curTime - prevTime);
+		}
+	}
+
+	private int addRolloverTime(int timeInSeconds) {
+		int timeToAddInSeconds = (64000 / 1024) * 1000;
+		return timeInSeconds + timeToAddInSeconds;
 	}
 
 	/**
