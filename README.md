@@ -1,5 +1,5 @@
 # j-antplus
-Library for speaking to select ant+ devices
+Java Library for speaking with ANT / ANT+ devices through a usb dongle.
 
 I set up this project trying to talk to my personal ant+ devices.
 Goal is to implement needed ant messages and ant+ datapages in order to talk to following set of devices:
