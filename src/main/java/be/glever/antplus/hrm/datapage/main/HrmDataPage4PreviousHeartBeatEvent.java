@@ -17,7 +17,7 @@ public class HrmDataPage4PreviousHeartBeatEvent extends AbstractHRMDataPage {
 	/**
 	 * Similar to {@link AbstractHRMDataPage#getHeartBeatEventTime()}, but for previous heart beat. Provides level of redundancy.
 	 */
-	public int getPreviousHeartBeatEventTime() {
+	public double getPreviousHeartBeatEventTime() {
 		return calculateHeartBeatEventTime(getPageSpecificBytes()[1], getPageSpecificBytes()[2]);
 	}
 

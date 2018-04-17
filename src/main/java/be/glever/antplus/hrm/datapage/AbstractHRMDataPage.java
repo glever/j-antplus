@@ -23,13 +23,13 @@ public abstract class AbstractHRMDataPage extends AbstractAntPlusDataPage {
 	 * Note that the ANT+ field size for this is 16 bit and resolution is 1/1024 seconds,
 	 * so the  value rolls over at 63.999 seconds ( ((1/1024)*(2^17)) - (1/1024)) ).
 	 */
-	public int getHeartBeatEventTime() {
+	public double getHeartBeatEventTime() {
 		return calculateHeartBeatEventTime(getDataPageBytes()[4], getDataPageBytes()[5]);
 	}
 
-	protected int calculateHeartBeatEventTime(byte bite1, byte bite2){
+	protected double calculateHeartBeatEventTime(byte bite1, byte bite2){
 		int timeAnt = ByteUtils.fromUShort(bite1, bite2);
-		return (timeAnt * 1024) / 1000;
+		return (timeAnt / 1024) * 1000;
 	}
 
 	/**

@@ -25,7 +25,6 @@ public class AntUsbMessageReader implements Runnable {
 	private boolean stop = false;
 	private MessageBus<AntMessage> messageBus;
 	private Thread runningThread;
-	private boolean process = false;
 
 	public AntUsbMessageReader(UsbPipe inPipe) {
 		this.inPipe = inPipe;
@@ -51,11 +50,11 @@ public class AntUsbMessageReader implements Runnable {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Read {} bytes", ByteUtils.hexString(buffer));
 					}
-					if(process && buffer[0] ==  SYNC){
+					if(buffer[0] ==  SYNC){
 						messageBus.put(AntMessageRegistry.from(buffer));
 					}else{
 						// if this happens too much, treat buffer as 'sliding window' instead of only relying on first byte
-						LOG.warn("Buffer{} didn't start with sync byte. Ignoring...", ByteUtils.hexString(buffer));
+						LOG.warn("Buffer {} didn't start with sync byte. Ignoring...", ByteUtils.hexString(buffer));
 					}
 
 				}
@@ -80,7 +79,4 @@ public class AntUsbMessageReader implements Runnable {
 		this.messageBus.close();
 	}
 
-	public void startProcessing() {
-		this.process = true;
-	}
 }

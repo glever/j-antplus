@@ -67,7 +67,6 @@ public class ByteUtils {
 
 	public static int fromUShort(byte bite0, byte bite1) {
 		int val =  (0xFF & bite0) | ((0xFF & bite1) << 8);
-		LOG.info("Converted {} to {}", ByteUtils.hexString(new byte[]{bite0, bite1}), val);
 		return val;
 	}
 }

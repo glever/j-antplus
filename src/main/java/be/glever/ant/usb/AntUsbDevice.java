@@ -53,7 +53,6 @@ public class AntUsbDevice implements Closeable {
 	 * @param device
 	 */
 	public AntUsbDevice(UsbDevice device) {
-		LOG.info("new device");
 		this.device = device;
 	}
 
@@ -195,13 +194,12 @@ public class AntUsbDevice implements Closeable {
 		inPipe.open();
 
 		antMessageUsbReader = new AntUsbMessageReader(inPipe);
-		antMessageUsbReader.addQueueListener(-1, -1, new GlobalMessageBusListener());
 		new Thread(antMessageUsbReader).start();
 	}
 
 	private void initAntDevice() throws AntException, InterruptedException, ExecutionException {
 		resetUsbDevice();
-		antMessageUsbReader.startProcessing();
+		antMessageUsbReader.addQueueListener(-1, -1, new GlobalMessageBusListener());
 
 		CompletableFuture<AntMessage> capabilitiesFuture = sendMessage(createRequestMessage(CapabilitiesResponseMessage.MSG_ID));
 		this.capabilities = new AntUsbDeviceCapabilities((CapabilitiesResponseMessage) capabilitiesFuture.get());
@@ -219,6 +217,7 @@ public class AntUsbDevice implements Closeable {
 	}
 
 	private void resetUsbDevice() throws InterruptedException {
+		Thread.sleep(SLEEP_AFTER_RESET);
 		sendMessage(new ResetSystemMessage());
 		Thread.sleep(SLEEP_AFTER_RESET);
 	}
