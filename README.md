@@ -4,8 +4,8 @@ Java Library for speaking with ANT / ANT+ devices through a usb dongle.
 I set up this project trying to talk to my personal ant+ devices.
 Goal is to implement needed ant messages and ant+ datapages in order to talk to following set of devices:
 * Heart rate monitor:
-** Basic support. Integrates with Garmin HRM3SS. Check out HrmTest_Main under src/test
-** No support for legacy format (yet, because I don't own a legacy device). If you need it, check out HrmChannel to sniff the datapage 1st bit alternating every 4 packages.
+	* Basic support. Integrates with Garmin HRM3SS. Check out HrmTest_Main under src/test
+	* No support for legacy format (yet, because I don't own a legacy device). If you need it, check out HrmChannel to sniff the datapage 1st bit alternating every 4 packages.
 * Speed sensor (TODO)
 * Cadence sensor(TODO)
 * Power meter(TODO)
