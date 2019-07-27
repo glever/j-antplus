@@ -178,7 +178,14 @@ public class AntUsbDevice implements Closeable {
 			throw new AntException("Usb device already claimed");
 		}
 
-		usbInterface.claim();
+		usbInterface.claim(new UsbInterfacePolicy()
+		{
+			@Override
+			public boolean forceClaim(UsbInterface usbInterface)
+			{
+				return true;
+			}
+		});
 
 		@SuppressWarnings("unchecked")
 		List<UsbEndpoint> usbEndpoints = usbInterface.getUsbEndpoints();

@@ -19,7 +19,13 @@ I resolved this by using the "Zadig" tool, select the ant-m usb stick (you may n
 and *downgrade* the driver to 1.2.6.0 (which is actually the latest libusb driver I could find on the net).
 
 ## Linux
-Not tested but I expect this to go a lot smoother
+Tested on Ubuntu: you need to give access to the usb interface for current user.
+I followed this approach (which may give too wide permissions to your taste): https://askubuntu.com/a/930338  
+```
+echo 'SUBSYSTEM=="usb", MODE="0660", GROUP="plugdev"' > /etc/udev/rules.d/00-usb-permissions.rules
+udevadm control --reload-rules
+```
+After this, unplug and re-plug the dongle.
 
 # Current status: 
 Codebase still unstable but foundation is shaping up. Expect a few heavy refactors until things stabilize.
