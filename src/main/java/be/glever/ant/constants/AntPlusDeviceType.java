@@ -1,15 +1,15 @@
 package be.glever.ant.constants;
 
 public enum AntPlusDeviceType {
-	HRM((byte) 0x78);
+    HRM((byte) 0x78);
 
-	private byte value;
+    private byte value;
 
-	AntPlusDeviceType(byte i) {
-		value = i;
-	}
+    AntPlusDeviceType(byte i) {
+        value = i;
+    }
 
-	public byte value() {
-		return value;
-	}
+    public byte value() {
+        return value;
+    }
 }

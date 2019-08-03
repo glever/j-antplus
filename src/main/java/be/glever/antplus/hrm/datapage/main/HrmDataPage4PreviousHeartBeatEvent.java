@@ -8,26 +8,26 @@ import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
  */
 public class HrmDataPage4PreviousHeartBeatEvent extends AbstractHRMDataPage {
 
-	public static final byte PAGE_NR = 4;
+    public static final byte PAGE_NR = 4;
 
-	public HrmDataPage4PreviousHeartBeatEvent(byte[] dataPageBytes) {
-		super(dataPageBytes);
-	}
+    public HrmDataPage4PreviousHeartBeatEvent(byte[] dataPageBytes) {
+        super(dataPageBytes);
+    }
 
-	/**
-	 * Similar to {@link AbstractHRMDataPage#getHeartBeatEventTime()}, but for previous heart beat. Provides level of redundancy.
-	 */
-	public double getPreviousHeartBeatEventTime() {
-		return calculateHeartBeatEventTime(getPageSpecificBytes()[1], getPageSpecificBytes()[2]);
-	}
+    /**
+     * Similar to {@link AbstractHRMDataPage#getHeartBeatEventTime()}, but for previous heart beat. Provides level of redundancy.
+     */
+    public double getPreviousHeartBeatEventTime() {
+        return calculateHeartBeatEventTime(getPageSpecificBytes()[1], getPageSpecificBytes()[2]);
+    }
 
-	@Override
-	public byte getPageNumber() {
-		return PAGE_NR;
-	}
+    @Override
+    public byte getPageNumber() {
+        return PAGE_NR;
+    }
 
-	@Override
-	public String toString() {
-		return "HrmDataPage4PreviousHeartBeatEvent{" + super.getToString() + ",previousEventTime=" + getPreviousHeartBeatEventTime() + "}";
-	}
+    @Override
+    public String toString() {
+        return "HrmDataPage4PreviousHeartBeatEvent{" + super.getToString() + ",previousEventTime=" + getPreviousHeartBeatEventTime() + "}";
+    }
 }

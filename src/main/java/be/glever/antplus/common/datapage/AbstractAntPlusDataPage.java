@@ -7,24 +7,24 @@ import java.util.Arrays;
  */
 public abstract class AbstractAntPlusDataPage {
 
-	private byte[] dataPageBytes;
+    private byte[] dataPageBytes;
 
-	public AbstractAntPlusDataPage(byte[] dataPageBytes) {
-		this.dataPageBytes = dataPageBytes;
-	}
+    public AbstractAntPlusDataPage(byte[] dataPageBytes) {
+        this.dataPageBytes = dataPageBytes;
+    }
 
-	public byte[] getDataPageBytes() {
-		return dataPageBytes;
-	}
+    public byte[] getDataPageBytes() {
+        return dataPageBytes;
+    }
 
-	public abstract byte getPageNumber();
+    public abstract byte getPageNumber();
 
-	// TODO may be HRM  or main/background datapage specific. Pull down if necessary.
-	public boolean getPageChangeToggle() {
-		return (1 & getDataPageBytes()[1]) == 1;
-	}
+    // TODO may be HRM  or main/background datapage specific. Pull down if necessary.
+    public boolean getPageChangeToggle() {
+        return (1 & getDataPageBytes()[1]) == 1;
+    }
 
-	protected byte[] dataPageSubArray(int from, int to){
-		return Arrays.copyOfRange(getDataPageBytes(), from, to);
-	}
+    protected byte[] dataPageSubArray(int from, int to) {
+        return Arrays.copyOfRange(getDataPageBytes(), from, to);
+    }
 }

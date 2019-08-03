@@ -2,32 +2,30 @@ package be.glever.ant.util;
 
 import java.io.ByteArrayOutputStream;
 
-import be.glever.ant.message.AbstractAntMessage;
-
 public class ByteArrayBuilder {
 
-	private ByteArrayOutputStream baos;
+    private ByteArrayOutputStream baos;
 
-	public ByteArrayBuilder() {
-		this.baos = new ByteArrayOutputStream();
-	}
-	
-	public ByteArrayBuilder write(byte ... bytes) {
-		for(byte b : bytes) {
-			baos.write(b);			
-		}
-		return this;
-	}
-	
-	public byte[] toByteArray() {
-		return baos.toByteArray();
-	}
+    public ByteArrayBuilder() {
+        this.baos = new ByteArrayOutputStream();
+    }
 
-	public ByteArrayBuilder writeIfNotNull(Byte addr) {
-		if(addr != null) {
-			baos.write(addr);
-		}
-		return this;
-	}
-	
+    public ByteArrayBuilder write(byte... bytes) {
+        for (byte b : bytes) {
+            baos.write(b);
+        }
+        return this;
+    }
+
+    public byte[] toByteArray() {
+        return baos.toByteArray();
+    }
+
+    public ByteArrayBuilder writeIfNotNull(Byte addr) {
+        if (addr != null) {
+            baos.write(addr);
+        }
+        return this;
+    }
+
 }

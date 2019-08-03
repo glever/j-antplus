@@ -10,14 +10,14 @@ import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
 public class HrmDataPage0Default extends AbstractHRMDataPage {
 
 
-	public static final byte PAGE_NR = 0;
+    public static final byte PAGE_NR = 0;
 
-	public HrmDataPage0Default(byte[] dataPageBytes) {
-		super(dataPageBytes);
-	}
+    public HrmDataPage0Default(byte[] dataPageBytes) {
+        super(dataPageBytes);
+    }
 
-	@Override
-	public byte getPageNumber() {
-		return PAGE_NR;
-	}
+    @Override
+    public byte getPageNumber() {
+        return PAGE_NR;
+    }
 }

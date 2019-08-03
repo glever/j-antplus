@@ -14,56 +14,56 @@ import java.util.concurrent.ExecutionException;
 
 public class HRMSlave {
 
-	private static final byte ANTPLUS_HRM_FREQUENCY = (byte) 57; // 2457Mhz
-	private AntUsbDevice antUsbDevice;
+    private static final byte ANTPLUS_HRM_FREQUENCY = (byte) 57; // 2457Mhz
+    private AntUsbDevice antUsbDevice;
 
-	public HRMSlave(AntUsbDevice antUsbDevice) {
-		this.antUsbDevice = antUsbDevice;
-	}
+    public HRMSlave(AntUsbDevice antUsbDevice) {
+        this.antUsbDevice = antUsbDevice;
+    }
 
-	public AntChannel[] listDevices() throws AntException, ExecutionException, InterruptedException {
-		HRMChannel channel = new HRMChannel();
+    public AntChannel[] listDevices() throws AntException, ExecutionException, InterruptedException {
+        HRMChannel channel = new HRMChannel();
 
-		byte channelNumber = 0x00;
+        byte channelNumber = 0x00;
 
-		// ASSIGN CHANNEL
-		NetworkKeyMessage networkKeyMessage = new NetworkKeyMessage(channelNumber, channel.getNetwork().getNetworkKey());
-		ChannelEventOrResponseMessage setNetworkKeyResponse = (ChannelEventOrResponseMessage) antUsbDevice.sendMessage(networkKeyMessage).get();
-		if (setNetworkKeyResponse.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
-			throw new RuntimeException("Could not set network key");
-		}
+        // ASSIGN CHANNEL
+        NetworkKeyMessage networkKeyMessage = new NetworkKeyMessage(channelNumber, channel.getNetwork().getNetworkKey());
+        ChannelEventOrResponseMessage setNetworkKeyResponse = (ChannelEventOrResponseMessage) antUsbDevice.sendBlocking(networkKeyMessage);
+        if (setNetworkKeyResponse.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
+            throw new RuntimeException("Could not set network key");
+        }
 
-		AssignChannelMessage assignChannelMessage = new AssignChannelMessage(channelNumber, (byte) 0x40, (byte) 0x00);
-		ChannelEventOrResponseMessage response = (ChannelEventOrResponseMessage) antUsbDevice.sendMessage(assignChannelMessage).get();
-		if (response.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
-			throw new RuntimeException("Could not assign channel");
-		}
+        AssignChannelMessage assignChannelMessage = new AssignChannelMessage(channelNumber, (byte) 0x40, (byte) 0x00);
+        ChannelEventOrResponseMessage response = (ChannelEventOrResponseMessage) antUsbDevice.sendBlocking(assignChannelMessage);
+        if (response.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
+            throw new RuntimeException("Could not assign channel");
+        }
 
-		ChannelIdMessage channelIdMessage = new ChannelIdMessage(channelNumber, new byte[]{0x00, 0x00}, AntPlusDeviceType.HRM.value(), (byte)0x00);
-		ChannelEventOrResponseMessage channelIdResponse = (ChannelEventOrResponseMessage) antUsbDevice.sendMessage(channelIdMessage).get();
-		if (channelIdResponse.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
-			throw new RuntimeException("Could set channelId");
-		}
-		ChannelPeriodMessage channelPeriodMessage = new ChannelPeriodMessage(channelNumber,ByteUtils.toUShort(8070));
-		ChannelEventOrResponseMessage channelPeriodResponseMessage = (ChannelEventOrResponseMessage) antUsbDevice.sendMessage(channelPeriodMessage).get();
-		if (channelPeriodResponseMessage.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
-			throw new RuntimeException("Could set channel period");
-		}
+        ChannelIdMessage channelIdMessage = new ChannelIdMessage(channelNumber, new byte[]{0x00, 0x00}, AntPlusDeviceType.HRM.value(), (byte) 0x00);
+        ChannelEventOrResponseMessage channelIdResponse = (ChannelEventOrResponseMessage) antUsbDevice.sendBlocking(channelIdMessage);
+        if (channelIdResponse.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
+            throw new RuntimeException("Could set channelId");
+        }
+        ChannelPeriodMessage channelPeriodMessage = new ChannelPeriodMessage(channelNumber, ByteUtils.toUShort(8070));
+        ChannelEventOrResponseMessage channelPeriodResponseMessage = (ChannelEventOrResponseMessage) antUsbDevice.sendBlocking(channelPeriodMessage);
+        if (channelPeriodResponseMessage.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
+            throw new RuntimeException("Could set channel period");
+        }
 
-		ChannelRfFrequencyMessage channelRfFrequencyMessage = new ChannelRfFrequencyMessage(channelNumber,(byte)0x39);
-		ChannelEventOrResponseMessage channelRfFrequencyResponse = (ChannelEventOrResponseMessage) antUsbDevice.sendMessage(channelRfFrequencyMessage).get();
-		if (channelRfFrequencyResponse.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
-			throw new RuntimeException("Could not set rf frequency");
-		}
+        ChannelRfFrequencyMessage channelRfFrequencyMessage = new ChannelRfFrequencyMessage(channelNumber, (byte) 0x39);
+        ChannelEventOrResponseMessage channelRfFrequencyResponse = (ChannelEventOrResponseMessage) antUsbDevice.sendBlocking(channelRfFrequencyMessage);
+        if (channelRfFrequencyResponse.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
+            throw new RuntimeException("Could not set rf frequency");
+        }
 
-		response = (ChannelEventOrResponseMessage) antUsbDevice.sendMessage(new OpenChannelMessage(response.getChannelNumber())).get();
-		if (response.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
-			throw new RuntimeException("Could not open channel");
-		}
+        response = (ChannelEventOrResponseMessage) antUsbDevice.sendBlocking(new OpenChannelMessage(response.getChannelNumber()));
+        if (response.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
+            throw new RuntimeException("Could not open channel");
+        }
 
 
-		// OPEN CHANNEL
-		return null;
-	}
+        // OPEN CHANNEL
+        return null;
+    }
 
 }

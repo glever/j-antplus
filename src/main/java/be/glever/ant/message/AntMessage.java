@@ -4,10 +4,10 @@ import be.glever.ant.AntException;
 
 public interface AntMessage {
 
-	byte getMessageId();
+    byte getMessageId();
 
-	void parse(byte[] bytes) throws AntException;
+    void parse(byte[] bytes) throws AntException;
 
-	byte[] toByteArray();
+    byte[] toByteArray();
 
 }

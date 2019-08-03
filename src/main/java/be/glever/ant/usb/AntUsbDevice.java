@@ -18,12 +18,16 @@ import be.glever.ant.message.requestedresponse.ChannelStatusMessage;
 import be.glever.ant.message.requestedresponse.SerialNumberMessage;
 import be.glever.ant.messagebus.MessageBusListener;
 import be.glever.ant.util.ByteUtils;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.*;
+import reactor.core.scheduler.Schedulers;
 
 import javax.usb.*;
 import java.io.Closeable;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -33,305 +37,272 @@ import java.util.concurrent.ExecutionException;
  * Clients can
  */
 public class AntUsbDevice implements Closeable {
-	public static final int SLEEP_AFTER_RESET = 500;
-	private static Logger LOG = LoggerFactory.getLogger(AntUsbDevice.class);
-	private static final long DEFAULT_TIMEOUT = 1000;
+    public static final int SLEEP_AFTER_RESET = 500;
+    private static Logger LOG = LoggerFactory.getLogger(AntUsbDevice.class);
+    private static final long DEFAULT_TIMEOUT = 1000;
 
-	private boolean initialized = false;
-	private UsbDevice device;
+    private boolean initialized = false;
+    private UsbDevice device;
 
-	private UsbPipe outPipe;
+    private byte[] antVersion;
+    private AntUsbDeviceCapabilities capabilities;
+    private byte[] serialNumber;
+    private AntUsbReader antUsbReader;
+    private AntUsbWriter antUsbWriter;
+    private AntChannel[] antChannels;
+    private final FluxProcessor<AntMessage, AntMessage> antMessageProcessor = DirectProcessor.<AntMessage>create().serialize();
+    private final FluxSink<AntMessage> antMessageSink = antMessageProcessor.sink();
+    private final FluxProcessor<Throwable, Throwable> errorProcessor = DirectProcessor.<Throwable>create().serialize();
+    private final FluxSink<Throwable> errorSink = errorProcessor.sink();
 
-	private byte[] antVersion;
-	private AntUsbDeviceCapabilities capabilities;
-	private byte[] serialNumber;
-	private AntUsbMessageReader antMessageUsbReader;
-	private AntChannel[] antChannels;
+    /**
+     * Constructor. Note that clients should still call the {@link #initialize()} method.
+     *
+     * @param device
+     */
+    public AntUsbDevice(UsbDevice device) {
+        this.device = device;
+    }
 
-	/**
-	 * Constructor. Note that clients should still call the {@link #initialize()} method.
-	 * @param device
-	 */
-	public AntUsbDevice(UsbDevice device) {
-		this.device = device;
-	}
-
-
-	/**
-	 * Opens a connection to the ant usb device and reads the basic info.
-	 * @throws AntException
-	 */
-	public void initialize() throws AntException {
-
-		try {
-			initUsbInterface();
-			initAntDevice();
-		} catch (Exception e) {
-			throw new AntException(e);
-		}
-	}
-
-	/**
-	 * Helper method for configuring channels.
-	 * @param message
-	 * @param errorMessage Nullable. if given an {@link AntException} will be thrown when response is not {@link ChannelEventResponseCode#RESPONSE_NO_ERROR}
-	 * @throws AntException
-	 * @return
-	 */
-	private CompletableFuture<ChannelEventOrResponseMessage> sendChannelConfigMessage(AntMessage message, String errorMessage) {
-		try {
-
-			CompletableFuture<AntMessage> antMessageCompletableFuture = sendMessage(message);
-			if (errorMessage != null) {
-				ChannelEventOrResponseMessage responseMsg = (ChannelEventOrResponseMessage) antMessageCompletableFuture.get();
-				if (responseMsg.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
-					throw new AntException(errorMessage);
-				}
-			}
-			return antMessageCompletableFuture.thenApply(response -> (ChannelEventOrResponseMessage) response);
-
-		} catch (Exception e) {
-			throw new IllegalStateException(e);
-		}
-	}
-
-	public CompletableFuture<AntMessage> sendMessage(AntMessage requestMessage) throws AntException {
-		CompletableFuture<AntMessage> future = new CompletableFuture<>();
-		sendMessage(requestMessage, createListenerIfNeeded(requestMessage, future));
-		return future;
-	}
+    private static boolean forceClaim(UsbInterface usbInterface1) {
+        return true;
+    }
 
 
-	@Override
-	public void close() throws IOException {
-		try {
-			resetUsbDevice();
-		} catch (Exception e) {
-			LOG.error("Reset ant stick failed. Continuing with shutdown of usb interface.", e);
-		}
+    /**
+     * Opens a connection to the ant usb device and reads the basic info.
+     *
+     * @throws AntException
+     */
+    public void initialize() throws AntException {
 
-		try {
-			this.antMessageUsbReader.stop();
-			UsbInterface activeUsbInterface = getActiveUsbInterface();
-			if (activeUsbInterface.isClaimed()) {
-				activeUsbInterface.release();
-			}
-			antMessageUsbReader.close();
+        try {
+            initUsbInterface();
+            initAntDevice();
+        } catch (Exception e) {
+            throw new AntException(e);
+        }
+    }
 
-		} catch (Exception e) {
-			throw new IOException(e.getMessage(), e);
-		}
-	}
 
-	public void closeAllChannels() throws AntException, ExecutionException, InterruptedException {
-		short maxChannels = capabilities.getMaxChannels();
-		for (int i = 0; i < maxChannels; i++) {
-			RequestMessage requestMessage = new RequestMessage((byte) i, ChannelStatusMessage.MSG_ID);
-			ChannelStatusMessage responseMessage = (ChannelStatusMessage) sendMessage(requestMessage).get();
-			byte channelNumber = responseMessage.getChannelNumber();
-			ChannelStatusMessage.CHANNEL_STATUS channelStatus = responseMessage.getChannelStatus();
-			LOG.debug("Channel {} is in state {}.", channelNumber, channelStatus);
+    @Override
+    public void close() throws IOException {
+        try {
+            resetUsbDevice();
+        } catch (Exception e) {
+            LOG.error("Reset ant stick failed. Continuing with shutdown of usb interface.", e);
+        }
 
-			switch (channelStatus) {
-				case UnAssigned:
-					break;
-				case Assigned:
-					closeChannel(channelNumber);
-					break;
-				default:
-					throw new AntException("Don't know (yet) how to close channel in current state " + channelStatus + ".");
-			}
-		}
+        try {
+            this.antUsbReader.stop();
+            UsbInterface activeUsbInterface = getActiveUsbInterface();
+            if (activeUsbInterface.isClaimed()) {
+                activeUsbInterface.release();
+            }
+        } catch (Exception e) {
+            throw new IOException(e.getMessage(), e);
+        }
+    }
 
-	}
+    public void closeAllChannels() throws AntException, ExecutionException, InterruptedException {
+        short maxChannels = capabilities.getMaxChannels();
+        for (int i = 0; i < maxChannels; i++) {
+            RequestMessage requestMessage = new RequestMessage((byte) i, ChannelStatusMessage.MSG_ID);
+            ChannelStatusMessage responseMessage = (ChannelStatusMessage) sendBlocking(requestMessage);
+            byte channelNumber = responseMessage.getChannelNumber();
+            ChannelStatusMessage.CHANNEL_STATUS channelStatus = responseMessage.getChannelStatus();
+            LOG.debug("Channel {} is in state {}.", channelNumber, channelStatus);
 
-	public AntUsbDeviceCapabilities getCapabilities() {
-		return capabilities;
-	}
+            switch (channelStatus) {
+                case UnAssigned:
+                    break;
+                case Assigned:
+                    closeChannel(channelNumber);
+                    break;
+                default:
+                    throw new AntException("Don't know (yet) how to close channel in current state " + channelStatus + ".");
+            }
+        }
+    }
 
-	public void openChannel(AntChannel channel) {
-		// ASSIGN CHANNEL
-		byte channelNumber = getAvailableChannelNumber();
-		sendChannelConfigMessage(new NetworkKeyMessage(channelNumber, channel.getNetwork().getNetworkKey()), "Could not set network key");
-		sendChannelConfigMessage(new AssignChannelMessage(channelNumber, channel.getChannelType().getValue(), channel.getNetwork().getNetworkNumber()), "Could not assign channel");
-		sendChannelConfigMessage(new ChannelIdMessage(channelNumber, channel.getChannelId().getDeviceNumber(), channel.getChannelId().getDeviceType(), channel.getChannelId().getTransmissionType().getValue()), "Could set channelId");
-		sendChannelConfigMessage(new ChannelPeriodMessage(channelNumber, channel.getChannelPeriod()), "Could not set channel period");
-		sendChannelConfigMessage(new ChannelPeriodMessage(channelNumber, ByteUtils.toUShort(8070)), "Could not set channel period");
-		sendChannelConfigMessage(new ChannelRfFrequencyMessage(channelNumber, channel.getRfFrequency()), "Could not set rf frequency");
-		sendChannelConfigMessage(new OpenChannelMessage(channelNumber), "Could not open channel");
+    public AntUsbDeviceCapabilities getCapabilities() {
+        return capabilities;
+    }
 
-		this.antChannels[channelNumber] = channel;
-	}
+    public void openChannel(AntChannel channel) {
 
-	public Byte getAvailableChannelNumber() {
-		for (int i = 0; i < antChannels.length; i++) {
-			if (antChannels[i] == null) {
-				return (byte) i;
-			}
-		}
-		return null;
-	}
+        byte channelNumber = getAvailableChannelNumber();
 
-	private void initUsbInterface() throws AntException, UsbException {
-		UsbInterface usbInterface = getActiveUsbInterface();
-		if (usbInterface.isClaimed()) {
-			throw new AntException("Usb device already claimed");
-		}
+        sendBlocking(new NetworkKeyMessage(channelNumber, channel.getNetwork().getNetworkKey()));
+        sendBlocking(new AssignChannelMessage(channelNumber, channel.getChannelType().getValue(), channel.getNetwork().getNetworkNumber()));
+        sendBlocking(new ChannelIdMessage(channelNumber, channel.getChannelId().getDeviceNumber(), channel.getChannelId().getDeviceType(), channel.getChannelId().getTransmissionType().getValue()));
+        sendBlocking(new ChannelPeriodMessage(channelNumber, channel.getChannelPeriod()));
+        sendBlocking(new ChannelRfFrequencyMessage(channelNumber, channel.getRfFrequency()));
+        sendBlocking(new OpenChannelMessage(channelNumber));
 
-		usbInterface.claim(new UsbInterfacePolicy()
-		{
-			@Override
-			public boolean forceClaim(UsbInterface usbInterface)
-			{
-				return true;
-			}
-		});
+        this.antChannels[channelNumber] = channel;
+    }
 
-		@SuppressWarnings("unchecked")
-		List<UsbEndpoint> usbEndpoints = usbInterface.getUsbEndpoints();
-		UsbEndpoint inEndpoint = usbEndpoints.stream()
-				.filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_IN).findAny().get();
-		UsbEndpoint outEndpoint = usbEndpoints.stream()
-				.filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_OUT).findAny().get();
 
-		outPipe = outEndpoint.getUsbPipe();
-		outPipe.open();
+    public AntMessage sendBlocking(AntBlockingMessage requestMessage) {
+        Flux<AntMessage> response = this.antUsbReader.antMessages()
+                .filter(responseMessage -> RequestMatcher.isMatchingResponse(requestMessage, responseMessage))
+                .concatMap(AntUsbDevice::mapToErrorIfRequired)
+                .take(1);
 
-		UsbPipe inPipe = inEndpoint.getUsbPipe();
-		inPipe.open();
+        Mono<Void> messageSender = Mono.fromRunnable(() -> this.antUsbWriter.write(requestMessage));
+        return (AntMessage) Flux.merge(response, messageSender).blockFirst(Duration.ofSeconds(10));
+    }
 
-		antMessageUsbReader = new AntUsbMessageReader(inPipe);
-		new Thread(antMessageUsbReader).start();
-	}
 
-	private void initAntDevice() throws AntException, InterruptedException, ExecutionException {
-		resetUsbDevice();
-		antMessageUsbReader.addQueueListener(-1, -1, new GlobalMessageBusListener());
+    private static Publisher<AntMessage> mapToErrorIfRequired(AntMessage antMessage) {
+        LOG.debug("in flux, received message {}", antMessage);
+        if (antMessage instanceof ChannelEventOrResponseMessage) {
+            ChannelEventOrResponseMessage channelEventOrResponseMessage = (ChannelEventOrResponseMessage) antMessage;
+            if (channelEventOrResponseMessage.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
+                return Flux.error(new AntException(antMessage));
+            }
+        }
+        return Flux.just(antMessage);
+    }
 
-		CompletableFuture<AntMessage> capabilitiesFuture = sendMessage(createRequestMessage(CapabilitiesResponseMessage.MSG_ID));
-		this.capabilities = new AntUsbDeviceCapabilities((CapabilitiesResponseMessage) capabilitiesFuture.get());
-		this.antChannels = new AntChannel[capabilities.getMaxChannels()];
+    public Byte getAvailableChannelNumber() {
+        for (int i = 0; i < antChannels.length; i++) {
+            if (antChannels[i] == null) {
+                return (byte) i;
+            }
+        }
+        return null;
+    }
 
-		CompletableFuture<AntMessage> antVersionFuture = sendMessage(createRequestMessage(AntVersionMessage.MSG_ID));
-		this.antVersion = ((AntVersionMessage) antVersionFuture.get()).getAntVersion();
+    private void initUsbInterface() throws AntException, UsbException {
+        UsbInterface usbInterface = getActiveUsbInterface();
+        if (usbInterface.isClaimed()) {
+            throw new AntException("Usb device already claimed");
+        }
 
-		CompletableFuture<AntMessage> deviceSerialNumberFuture = sendMessage(createRequestMessage(SerialNumberMessage.MSG_ID));
-		this.serialNumber = ((SerialNumberMessage) deviceSerialNumberFuture.get()).getSerialNumber();
+        usbInterface.claim(AntUsbDevice::forceClaim);
 
-		LOG.debug("Capabilities: {}", this.capabilities.toString());
-		LOG.debug("Ant Version: {}", ByteUtils.hexString(this.antVersion));
-		LOG.debug("SerialNumber: {}", ByteUtils.hexString(this.serialNumber));
-	}
+        @SuppressWarnings("unchecked")
+        List<UsbEndpoint> usbEndpoints = usbInterface.getUsbEndpoints();
+        UsbEndpoint inEndpoint = usbEndpoints.stream()
+                .filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_IN).findAny().get();
+        UsbEndpoint outEndpoint = usbEndpoints.stream()
+                .filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_OUT).findAny().get();
 
-	private void resetUsbDevice() throws InterruptedException {
-		Thread.sleep(SLEEP_AFTER_RESET);
-		sendMessage(new ResetSystemMessage());
-		Thread.sleep(SLEEP_AFTER_RESET);
-	}
+        UsbPipe usbOutPipe = outEndpoint.getUsbPipe();
+        usbOutPipe.open();
 
-	private synchronized void sendMessage(AntMessage message, MessageBusListener<AntMessage> listener)
-			throws AntException {
-		try {
-			byte[] messageBytes = message.toByteArray();
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Sending {} with bytes {}.", message.getClass().getSimpleName(), ByteUtils.hexString(messageBytes));
-			}
+        UsbPipe inPipe = inEndpoint.getUsbPipe();
+        inPipe.open();
 
-			if (listener != null) {
-				antMessageUsbReader.addQueueListener(DEFAULT_TIMEOUT, 1, listener);
-			}
-			outPipe.syncSubmit(messageBytes);
-		} catch (Throwable t) {
-			throw new AntException(t);
-		}
-	}
+        antUsbReader = new AntUsbReader(inPipe);
+        new Thread(antUsbReader, "ant-usb-reader").start();
+        antUsbWriter = new AntUsbWriter(usbOutPipe);
 
-	private UsbInterface getActiveUsbInterface() {
-		return (UsbInterface) this.device.getActiveUsbConfiguration().getUsbInterfaces().get(0);
-	}
+        subscribeTo(antUsbReader);
+    }
 
-	private void closeChannel(byte channelNumber) throws InterruptedException, ExecutionException, AntException {
-		UnassignChannelMessage unassignChannelMessage = new UnassignChannelMessage(channelNumber);
-		ChannelEventOrResponseMessage unassignResponseMsg = (ChannelEventOrResponseMessage) sendMessage(unassignChannelMessage).get();
-		if (unassignResponseMsg.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
-			LOG.debug("Received unexpected message {}. Halting program.", unassignResponseMsg);
-			throw new AntException("Could not close channel " + channelNumber);
-		}
-		LOG.debug("Successfully unassigned channel {}.", channelNumber);
-	}
+    private void subscribeTo(AntUsbReader antUsbMessageReader) {
+        antUsbMessageReader
+                .antMessages()
+                .publishOn(Schedulers.elastic())
+                .doOnNext(this.antMessageSink::next)
+                .doOnError(this.errorSink::next)
+                .subscribe();
 
-	private class GlobalMessageBusListener implements MessageBusListener<AntMessage> {
+        this.antMessageProcessor
+                .doOnNext(antMessage -> {
+                    LOG.debug("Sending message to global messagebus listener: {}", antMessage);
+                    new GlobalMessageBusListener().handle(antMessage);
+                })
+                .subscribe();
 
-		@Override
-		public boolean handle(AntMessage antMessage) {
-			LOG.debug("GlobalMessageListener: Received {}", antMessage.toString());
+        this.errorProcessor.doOnNext(
+                error -> {
+                    LOG.error("TODO Handle error " + error);
+                })
+                .subscribe();
+    }
 
-			if (antMessage instanceof ChannelEventOrResponseMessage) {
-				ChannelEventOrResponseMessage msg = (ChannelEventOrResponseMessage) antMessage;
-				byte channelNr = msg.getChannelNumber();
-				notifyChannel(channelNr, msg);
+    private void initAntDevice() throws AntException, InterruptedException, ExecutionException {
+        resetUsbDevice();
 
-				if (msg.getResponseCode() == ChannelEventResponseCode.EVENT_CHANNEL_CLOSED) {
-					AntUsbDevice.this.antChannels[channelNr] = null;
-				}
+        CapabilitiesResponseMessage capabilitiesResponseMessage = (CapabilitiesResponseMessage) sendBlocking(RequestMessage.forMessageId(CapabilitiesResponseMessage.MSG_ID));
+        this.capabilities = new AntUsbDeviceCapabilities(capabilitiesResponseMessage);
+        this.antChannels = new AntChannel[capabilities.getMaxChannels()];
 
-			} else if (antMessage instanceof BroadcastDataMessage) {
-				BroadcastDataMessage msg = (BroadcastDataMessage) antMessage;
-				byte channelNumber = msg.getChannelNumber();
+        AntVersionMessage antVersionMessage = (AntVersionMessage) sendBlocking(RequestMessage.forMessageId(AntVersionMessage.MSG_ID));
+        this.antVersion = antVersionMessage.getAntVersion();
 
-				notifyChannel(channelNumber, msg);
-			}
-			return true;
-		}
+        SerialNumberMessage serialNumberMessage = (SerialNumberMessage) sendBlocking(RequestMessage.forMessageId(SerialNumberMessage.MSG_ID));
+        this.serialNumber = serialNumberMessage.getSerialNumber();
 
-		private void notifyChannel(byte channelNumber, AntMessage msg) {
-			AntChannel antChannel = getAntChannel(channelNumber);
-			if (antChannel != null) {
-				antChannel.handle(msg);
-			}
-		}
+        LOG.debug("Capabilities: {}", this.capabilities.toString());
+        LOG.debug("Ant Version: {}", ByteUtils.hexString(this.antVersion));
+        LOG.debug("SerialNumber: {}", ByteUtils.hexString(this.serialNumber));
+    }
 
-		private AntChannel getAntChannel(byte channelNr) {
-			if (AntUsbDevice.this.antChannels == null) {
-				return null; // can occur @ init time after attaching listener but before acquiring capabilities.
-			}
-			return AntUsbDevice.this.antChannels[channelNr];
-		}
-	}
+    private void resetUsbDevice() throws InterruptedException {
+        Thread.sleep(SLEEP_AFTER_RESET);
+        antUsbWriter.write(new ResetSystemMessage());
+        Thread.sleep(SLEEP_AFTER_RESET);
+    }
 
-	private RequestMessage createRequestMessage(byte requestedMsgId) {
-		return new RequestMessage((byte) 0, requestedMsgId, (byte) 0, (byte) 0);
-	}
+    private UsbInterface getActiveUsbInterface() {
+        return (UsbInterface) this.device.getActiveUsbConfiguration().getUsbInterfaces().get(0);
+    }
 
-	private MessageBusListener<AntMessage> createListenerIfNeeded(AntMessage msgToSend, CompletableFuture<AntMessage> future) {
-		// TODO refactor into something readable
-		if (msgToSend instanceof RequestMessage) {
-			return msg -> {
-				RequestMessage requestMsgToSend = (RequestMessage) msgToSend;
-				if (requestMsgToSend.getMsgIdRequested() == msg.getMessageId()) {
-					LOG.debug("RequestMessageListener, treating message " + ByteUtils.hexString(((AbstractAntMessage) msg).getMessageContent()));
-					future.complete(msg);
-					return true;
-				}
-				LOG.debug("RequestMessageListener. Waiting for msgId {}  NOT treating message {}", ByteUtils.hexString(requestMsgToSend.getMsgIdRequested()), ByteUtils.hexString(msg.toByteArray()));
-				return false;
-			};
-		} else if (msgToSend instanceof AntBlockingMessage) {
-			return msg -> {
-				if (msg instanceof ChannelEventOrResponseMessage) {
-					ChannelEventOrResponseMessage channelEventOrResponseMessage = (ChannelEventOrResponseMessage) msg;
-					if (((ChannelEventOrResponseMessage) msg).getRespondToMessageId() == msgToSend.getMessageId()) {
-						LOG.debug("ChannelEventMessageListener, treating message " + ByteUtils.hexString(((ChannelEventOrResponseMessage) msg).getMessageContent()));
-						future.complete(msg);
-						return true;
-					}
-					LOG.debug("ChannelEventMessageListener. Waiting for msgId {}  NOT treating message {}"
-							, ByteUtils.hexString(channelEventOrResponseMessage.getRespondToMessageId())
-							, ByteUtils.hexString(msg.toByteArray()));
-				}
-				return false;
-			};
-		}
-		return null;
-	}
+    private void closeChannel(byte channelNumber) throws InterruptedException, ExecutionException, AntException {
+        UnassignChannelMessage unassignChannelMessage = new UnassignChannelMessage(channelNumber);
+        ChannelEventOrResponseMessage unassignResponseMsg = (ChannelEventOrResponseMessage) sendBlocking(unassignChannelMessage);
+        if (unassignResponseMsg.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
+            LOG.debug("Received unexpected message {}. Halting program.", unassignResponseMsg);
+            throw new AntException("Could not close channel " + channelNumber);
+        }
+        LOG.debug("Successfully unassigned channel {}.", channelNumber);
+    }
+
+    public void send(AntMessage antMessage) {
+        antUsbWriter.write(antMessage);
+    }
+
+    private class GlobalMessageBusListener {
+
+        public boolean handle(AntMessage antMessage) {
+            LOG.debug("GlobalMessageListener: Received {}", antMessage.toString());
+
+            if (antMessage instanceof ChannelEventOrResponseMessage) {
+                ChannelEventOrResponseMessage msg = (ChannelEventOrResponseMessage) antMessage;
+                byte channelNr = msg.getChannelNumber();
+                notifyChannel(channelNr, msg);
+
+                if (msg.getResponseCode() == ChannelEventResponseCode.EVENT_CHANNEL_CLOSED) {
+                    AntUsbDevice.this.antChannels[channelNr] = null;
+                }
+
+            } else if (antMessage instanceof BroadcastDataMessage) {
+                BroadcastDataMessage msg = (BroadcastDataMessage) antMessage;
+                byte channelNumber = msg.getChannelNumber();
+
+                notifyChannel(channelNumber, msg);
+            }
+            return true;
+        }
+
+        private void notifyChannel(byte channelNumber, AntMessage msg) {
+            AntChannel antChannel = getAntChannel(channelNumber);
+            if (antChannel != null) {
+                antChannel.handle(msg);
+            }
+        }
+
+        private AntChannel getAntChannel(byte channelNr) {
+            if (AntUsbDevice.this.antChannels == null) {
+                return null; // can occur @ init time after attaching listener but before acquiring capabilities.
+            }
+            return AntUsbDevice.this.antChannels[channelNr];
+        }
+    }
+
 }

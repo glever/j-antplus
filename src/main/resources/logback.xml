@@ -1,19 +1,20 @@
 <configuration>
 
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <!-- encoders are assigned the type
-         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-    <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{10} - %msg%n</pattern>
-    </encoder>
-  </appender>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{10} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
-	<logger name="be.glever.ant.usb.AntUsbMessageReader" level="info"/>
-	<logger name="be.glever.ant.messagebus.MessageBus" level="info"/>
-	<logger name="be.glever.antplus.hrm.HRMChannel" level="info"/>
-	<logger name="be.glever.ant.message.AntMessageRegistry" level="debug"/>
+    <!--	<logger name="be.glever.ant.usb.AntUsbReader" level="info"/>-->
+    <!--	<logger name="be.glever.ant.messagebus.MessageBus" level="info"/>-->
+    <!--	<logger name="be.glever.antplus.hrm.HRMChannel" level="info"/>-->
+    <!--	<logger name="be.glever.ant.message.AntMessageRegistry" level="debug"/>-->
+    <logger name="be.glever" level="debug"/>
 
-  <root level="info">
-    <appender-ref ref="STDOUT" />
-  </root>
+    <root level="info">
+        <appender-ref ref="STDOUT"/>
+    </root>
 </configuration>

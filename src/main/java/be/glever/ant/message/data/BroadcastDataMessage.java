@@ -11,37 +11,37 @@ import java.util.Arrays;
  * TODO when needed, extend this class further to account for extended data behavior as defined in 7.1.1
  */
 public class BroadcastDataMessage extends AbstractAntMessage {
-	private byte[] messageContentBytes;
+    private byte[] messageContentBytes;
 
-	@Override
-	public byte[] getMessageContent() {
-		return messageContentBytes;
-	}
+    @Override
+    public byte[] getMessageContent() {
+        return messageContentBytes;
+    }
 
-	@Override
-	public void setMessageBytes(byte[] messageContentBytes) throws AntException {
-		this.messageContentBytes = messageContentBytes;
-	}
+    @Override
+    public void setMessageBytes(byte[] messageContentBytes) throws AntException {
+        this.messageContentBytes = messageContentBytes;
+    }
 
-	@Override
-	public byte getMessageId() {
-		return 0x4e;
-	}
+    @Override
+    public byte getMessageId() {
+        return 0x4e;
+    }
 
-	public byte getChannelNumber() {
-		return getMessageContent()[0];
-	}
+    public byte getChannelNumber() {
+        return getMessageContent()[0];
+    }
 
-	public byte[] getPayLoad() {
-		return Arrays.copyOfRange(messageContentBytes, 1, messageContentBytes.length);
-	}
+    public byte[] getPayLoad() {
+        return Arrays.copyOfRange(messageContentBytes, 1, messageContentBytes.length);
+    }
 
-	@Override
-	public String toString() {
-		return "BroadcastDataMessage{" +
-				"messageContentBytes=" + ByteUtils.hexString(messageContentBytes) +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "BroadcastDataMessage{" +
+                "messageContentBytes=" + ByteUtils.hexString(messageContentBytes) +
+                '}';
+    }
 
 
 }

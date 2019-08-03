@@ -5,33 +5,33 @@ import be.glever.ant.message.AbstractAntMessage;
 
 public class SerialNumberMessage extends AbstractAntMessage {
 
-	public static final byte MSG_ID = 0x61;
-	private byte[] bytes;
+    public static final byte MSG_ID = 0x61;
+    private byte[] bytes;
 
-	public SerialNumberMessage() {
-	}
+    public SerialNumberMessage() {
+    }
 
-	@Override
-	public byte getMessageId() {
-		return MSG_ID;
-	}
+    @Override
+    public byte getMessageId() {
+        return MSG_ID;
+    }
 
-	@Override
-	public byte[] getMessageContent() {
-		return bytes;
-	}
+    @Override
+    public byte[] getMessageContent() {
+        return bytes;
+    }
 
-	@Override
-	public void setMessageBytes(byte[] messageContentBytes) throws AntException {
-		this.bytes = messageContentBytes;
-	}
+    @Override
+    public void setMessageBytes(byte[] messageContentBytes) throws AntException {
+        this.bytes = messageContentBytes;
+    }
 
-	public SerialNumberMessage(byte[] serialNumber) {
-		this.bytes = serialNumber;
-	}
+    public SerialNumberMessage(byte[] serialNumber) {
+        this.bytes = serialNumber;
+    }
 
-	public byte[] getSerialNumber() {
-		return this.bytes;
-	}
+    public byte[] getSerialNumber() {
+        return this.bytes;
+    }
 
 }
