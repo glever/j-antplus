@@ -2,7 +2,6 @@ package be.glever.ant.usb;
 
 import be.glever.ant.AntException;
 import be.glever.ant.channel.AntChannel;
-import be.glever.ant.message.AbstractAntMessage;
 import be.glever.ant.message.AntBlockingMessage;
 import be.glever.ant.message.AntMessage;
 import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
@@ -16,7 +15,6 @@ import be.glever.ant.message.requestedresponse.AntVersionMessage;
 import be.glever.ant.message.requestedresponse.CapabilitiesResponseMessage;
 import be.glever.ant.message.requestedresponse.ChannelStatusMessage;
 import be.glever.ant.message.requestedresponse.SerialNumberMessage;
-import be.glever.ant.messagebus.MessageBusListener;
 import be.glever.ant.util.ByteUtils;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -29,7 +27,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /**
