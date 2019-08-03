@@ -1,33 +1,32 @@
 package be.glever.antplus.hrm;
 
-import be.glever.ant.channel.*;
+import be.glever.ant.channel.AntChannel;
+import be.glever.ant.channel.AntChannelId;
+import be.glever.ant.channel.AntChannelNetwork;
+import be.glever.ant.channel.AntChannelTransmissionType;
 import be.glever.ant.constants.AntChannelType;
 import be.glever.ant.constants.AntNetworkKeys;
 import be.glever.ant.constants.AntPlusDeviceType;
 import be.glever.ant.message.AntMessage;
+import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
 import be.glever.ant.message.data.BroadcastDataMessage;
 import be.glever.ant.util.ByteUtils;
-import be.glever.antplus.common.datapage.AbstractAntPlusDataPage;
-import be.glever.antplus.hrm.datapage.HrmDataPageRegistry;
-import be.glever.antplus.hrm.datapage.main.HrmDataPage4PreviousHeartBeatEvent;
-import be.glever.antplus.hrm.stats.StatCalculator;
-import be.glever.antplus.hrm.stats.StatSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 
-public class HRMChannel extends AntChannel implements AntChannelListener {
-    private static final Logger LOG = LoggerFactory.getLogger(HRMChannel.class);
+public class HRMChannel extends AntChannel {
     public static final byte CHANNEL_FREQUENCY = 0x39;
     public static final byte[] DEVICE_NUMBER_WILDCARD = {0x00, 0x00};
-    byte[] CHANNEL_PERIOD = ByteUtils.toUShort(8070);
     public static final byte DEFAULT_PUBLIC_NETWORK = 0x00;
-    private HrmDataPageRegistry registry = new HrmDataPageRegistry();
-    private int heartbeatCount;
+    private static final Logger LOG = LoggerFactory.getLogger(HRMChannel.class);
+    byte[] CHANNEL_PERIOD = ByteUtils.toUShort(8070);
 
     // todo doesnt belong here
     private int heartBeatEventTime;
 
-    private StatCalculator statCalculator = new StatCalculator();
+
+    private Flux<AntMessage> eventFlux;
 
     /**
      * Pair with any (the first found) HRM.
@@ -47,48 +46,25 @@ public class HRMChannel extends AntChannel implements AntChannelListener {
         setRfFrequency(CHANNEL_FREQUENCY);
         setChannelId(new AntChannelId(AntChannelTransmissionType.PAIRING_TRANSMISSION_TYPE, AntPlusDeviceType.HRM, deviceNumber));
         setChannelPeriod(CHANNEL_PERIOD);
-
-        super.addListener(this);
     }
 
     @Override
-    public void handle(AntMessage antMessage) {
-        if (antMessage instanceof BroadcastDataMessage) {
-            BroadcastDataMessage msg = (BroadcastDataMessage) antMessage;
-            byte[] payLoad = msg.getPayLoad();
-            removeToggleBit(payLoad);
-            AbstractAntPlusDataPage dataPage = registry.constructDataPage(payLoad);
+    public void subscribeTo(Flux<AntMessage> messageFlux) {
+        eventFlux = messageFlux.filter(this::isMatchingAntMessage);
+    }
 
-            LOG.debug("Received datapage " + dataPage.toString());
-            if (dataPage instanceof HrmDataPage4PreviousHeartBeatEvent) {
-                calcStats((HrmDataPage4PreviousHeartBeatEvent) dataPage);
-            }
+    public Flux<AntMessage> getEventFlux() {
+        return eventFlux;
+    }
+
+    private boolean isMatchingAntMessage(AntMessage message) {
+        if (message.getMessageId() == BroadcastDataMessage.MSG_ID) {
+            return ((BroadcastDataMessage) message).getChannelNumber() == super.getChannelNumber();
+        } else if (message.getMessageId() == ChannelEventOrResponseMessage.MSG_ID) {
+            return ((ChannelEventOrResponseMessage) message).getChannelNumber() == super.getChannelNumber();
         }
+        return false;
     }
 
-    // TODO responsibility of client
-    private void calcStats(HrmDataPage4PreviousHeartBeatEvent dataPage) {
-        if (this.heartbeatCount != dataPage.getHeartBeatCount()) {
-            this.heartbeatCount = dataPage.getHeartBeatCount();
 
-            StatSummary statSummary = this.statCalculator.push(dataPage);
-
-            LOG.info(statSummary.toString());
-        }
-    }
-
-    private int addRolloverTime(int timeInSeconds) {
-        int timeToAddInSeconds = (64000 / 1024) * 1000;
-        return timeInSeconds + timeToAddInSeconds;
-    }
-
-    /**
-     * For the moment not taking the legacy hrm devices into account.
-     * Non-legacy devices swap the first bit of the pageNumber every 4 messages.
-     *
-     * @param payLoad
-     */
-    private void removeToggleBit(byte[] payLoad) {
-        payLoad[0] = (byte) (0b01111111 & payLoad[0]);
-    }
 }

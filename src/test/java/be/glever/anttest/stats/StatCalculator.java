@@ -1,4 +1,4 @@
-package be.glever.antplus.hrm.stats;
+package be.glever.anttest.stats;
 
 import be.glever.antplus.hrm.datapage.main.HrmDataPage4PreviousHeartBeatEvent;
 import org.slf4j.Logger;
@@ -13,7 +13,7 @@ import java.util.List;
 public class StatCalculator {
     private static final Logger LOG = LoggerFactory.getLogger(StatCalculator.class);
 
-    public static final int HEARTBEAT_UNITS_SEC = 1 / 1024;
+    public static final int HEARTBEAT_UNITS_SEC = 1 / 1024; // TODO bug. resolves to 0.
     public static final int HEARTBEAT_ROLLOVER = 64000;
     public static final int HEARTBEAT_ROLLOVER_IN_MILLIS = 1000 * (HEARTBEAT_UNITS_SEC * HEARTBEAT_ROLLOVER); // 62500
     private List<HrmDataPage4PreviousHeartBeatEvent> heartBeats = new ArrayList<>();
@@ -29,7 +29,7 @@ public class StatCalculator {
         int window = 10;
         List<HrmDataPage4PreviousHeartBeatEvent> periodHeartBeats = heartBeats.size() < window ? heartBeats : heartBeats.subList(heartBeats.size() - window, heartBeats.size());
 
-        int rmssdListSize = heartBeats.size() < 100 ? heartBeats.size() : 100;
+        int rmssdListSize = Math.min(heartBeats.size(), 100);
         List<HrmDataPage4PreviousHeartBeatEvent> rmssdPeriod = heartBeats.subList(heartBeats.size() - rmssdListSize, heartBeats.size());
 
         double meanRr = calcMeanRr(periodHeartBeats);

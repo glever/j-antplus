@@ -2,21 +2,17 @@ package be.glever.ant.channel;
 
 import be.glever.ant.constants.AntChannelType;
 import be.glever.ant.message.AntMessage;
+import reactor.core.publisher.Flux;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class AntChannel {
+public abstract class AntChannel {
     private AntChannelId channelId;
     private AntChannelType channelType;
     private byte rfFrequency;
     private byte[] channelPeriod;
     private AntChannelNetwork network;
-    private List<AntChannelListener> antChannelListeners = new ArrayList<>();
+    private byte channelNumber;
 
-
-    public AntChannel() {
-    }
+    public abstract void subscribeTo(Flux<AntMessage> messageFlux);
 
 
     public AntChannelType getChannelType() {
@@ -72,15 +68,11 @@ public class AntChannel {
         this.network = network;
     }
 
-    public void handle(AntMessage msg) {
-        antChannelListeners.stream().forEach(listener -> listener.handle(msg));
+    protected byte getChannelNumber() {
+        return this.channelNumber;
     }
 
-    public void addListener(AntChannelListener listener) {
-        antChannelListeners.add(listener);
-    }
-
-    public void removeListener(AntChannelListener listener) {
-        antChannelListeners.remove(listener);
+    public void setChannelNumber(byte channelNumber) {
+        this.channelNumber = channelNumber;
     }
 }

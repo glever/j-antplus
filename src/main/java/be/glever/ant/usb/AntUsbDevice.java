@@ -10,7 +10,6 @@ import be.glever.ant.message.configuration.*;
 import be.glever.ant.message.control.OpenChannelMessage;
 import be.glever.ant.message.control.RequestMessage;
 import be.glever.ant.message.control.ResetSystemMessage;
-import be.glever.ant.message.data.BroadcastDataMessage;
 import be.glever.ant.message.requestedresponse.AntVersionMessage;
 import be.glever.ant.message.requestedresponse.CapabilitiesResponseMessage;
 import be.glever.ant.message.requestedresponse.ChannelStatusMessage;
@@ -27,19 +26,21 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Provides abstraction of and interaction with an ANT USB dongle.
  * Clients can
  */
 public class AntUsbDevice implements Closeable {
-    public static final int SLEEP_AFTER_RESET = 500;
-    private static Logger LOG = LoggerFactory.getLogger(AntUsbDevice.class);
+    private static final int SLEEP_AFTER_RESET = 500;
     private static final long DEFAULT_TIMEOUT = 1000;
-
-    private boolean initialized = false;
+    private static Logger LOG = LoggerFactory.getLogger(AntUsbDevice.class);
+    private final FluxProcessor<AntMessage, AntMessage> antMessageProcessor = DirectProcessor.<AntMessage>create().serialize();
+    private final FluxSink<AntMessage> antMessageSink = antMessageProcessor.sink();
+    private final FluxProcessor<Throwable, Throwable> errorProcessor = DirectProcessor.<Throwable>create().serialize();
+    private final FluxSink<Throwable> errorSink = errorProcessor.sink();
     private UsbDevice device;
+
 
     private byte[] antVersion;
     private AntUsbDeviceCapabilities capabilities;
@@ -47,16 +48,8 @@ public class AntUsbDevice implements Closeable {
     private AntUsbReader antUsbReader;
     private AntUsbWriter antUsbWriter;
     private AntChannel[] antChannels;
-    private final FluxProcessor<AntMessage, AntMessage> antMessageProcessor = DirectProcessor.<AntMessage>create().serialize();
-    private final FluxSink<AntMessage> antMessageSink = antMessageProcessor.sink();
-    private final FluxProcessor<Throwable, Throwable> errorProcessor = DirectProcessor.<Throwable>create().serialize();
-    private final FluxSink<Throwable> errorSink = errorProcessor.sink();
 
-    /**
-     * Constructor. Note that clients should still call the {@link #initialize()} method.
-     *
-     * @param device
-     */
+
     public AntUsbDevice(UsbDevice device) {
         this.device = device;
     }
@@ -65,12 +58,17 @@ public class AntUsbDevice implements Closeable {
         return true;
     }
 
+    private static Publisher<AntMessage> mapToErrorIfRequired(AntMessage antMessage) {
+        LOG.debug("in flux, received message {}", antMessage);
+        if (antMessage instanceof ChannelEventOrResponseMessage) {
+            ChannelEventOrResponseMessage channelEventOrResponseMessage = (ChannelEventOrResponseMessage) antMessage;
+            if (channelEventOrResponseMessage.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
+                return Flux.error(new AntException(antMessage));
+            }
+        }
+        return Flux.just(antMessage);
+    }
 
-    /**
-     * Opens a connection to the ant usb device and reads the basic info.
-     *
-     * @throws AntException
-     */
     public void initialize() throws AntException {
 
         try {
@@ -80,7 +78,6 @@ public class AntUsbDevice implements Closeable {
             throw new AntException(e);
         }
     }
-
 
     @Override
     public void close() throws IOException {
@@ -101,7 +98,7 @@ public class AntUsbDevice implements Closeable {
         }
     }
 
-    public void closeAllChannels() throws AntException, ExecutionException, InterruptedException {
+    public void closeAllChannels() throws AntException {
         short maxChannels = capabilities.getMaxChannels();
         for (int i = 0; i < maxChannels; i++) {
             RequestMessage requestMessage = new RequestMessage((byte) i, ChannelStatusMessage.MSG_ID);
@@ -138,11 +135,12 @@ public class AntUsbDevice implements Closeable {
         sendBlocking(new OpenChannelMessage(channelNumber));
 
         this.antChannels[channelNumber] = channel;
+        channel.setChannelNumber(channelNumber);
+        channel.subscribeTo(this.antMessageProcessor);
     }
 
-
     public AntMessage sendBlocking(AntBlockingMessage requestMessage) {
-        Flux<AntMessage> response = this.antUsbReader.antMessages()
+        Flux<AntMessage> response = this.antMessageProcessor
                 .filter(responseMessage -> RequestMatcher.isMatchingResponse(requestMessage, responseMessage))
                 .concatMap(AntUsbDevice::mapToErrorIfRequired)
                 .take(1);
@@ -151,25 +149,13 @@ public class AntUsbDevice implements Closeable {
         return (AntMessage) Flux.merge(response, messageSender).blockFirst(Duration.ofSeconds(10));
     }
 
-
-    private static Publisher<AntMessage> mapToErrorIfRequired(AntMessage antMessage) {
-        LOG.debug("in flux, received message {}", antMessage);
-        if (antMessage instanceof ChannelEventOrResponseMessage) {
-            ChannelEventOrResponseMessage channelEventOrResponseMessage = (ChannelEventOrResponseMessage) antMessage;
-            if (channelEventOrResponseMessage.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
-                return Flux.error(new AntException(antMessage));
-            }
-        }
-        return Flux.just(antMessage);
-    }
-
-    public Byte getAvailableChannelNumber() {
+    private byte getAvailableChannelNumber() {
         for (int i = 0; i < antChannels.length; i++) {
             if (antChannels[i] == null) {
                 return (byte) i;
             }
         }
-        return null;
+        throw new IllegalStateException("No available channels found");
     }
 
     private void initUsbInterface() throws AntException, UsbException {
@@ -183,9 +169,13 @@ public class AntUsbDevice implements Closeable {
         @SuppressWarnings("unchecked")
         List<UsbEndpoint> usbEndpoints = usbInterface.getUsbEndpoints();
         UsbEndpoint inEndpoint = usbEndpoints.stream()
-                .filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_IN).findAny().get();
+                .filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_IN)
+                .findAny()
+                .orElseThrow(() -> new IllegalStateException("Could not obtain usb input pipe."));
         UsbEndpoint outEndpoint = usbEndpoints.stream()
-                .filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_OUT).findAny().get();
+                .filter(endpoint -> endpoint.getDirection() == UsbConst.ENDPOINT_DIRECTION_OUT)
+                .findAny()
+                .orElseThrow(() -> new IllegalStateException("Could not obtain usb output pipe."));
 
         UsbPipe usbOutPipe = outEndpoint.getUsbPipe();
         usbOutPipe.open();
@@ -208,21 +198,12 @@ public class AntUsbDevice implements Closeable {
                 .doOnError(this.errorSink::next)
                 .subscribe();
 
-        this.antMessageProcessor
-                .doOnNext(antMessage -> {
-                    LOG.debug("Sending message to global messagebus listener: {}", antMessage);
-                    new GlobalMessageBusListener().handle(antMessage);
-                })
-                .subscribe();
-
         this.errorProcessor.doOnNext(
-                error -> {
-                    LOG.error("TODO Handle error " + error);
-                })
+                error -> LOG.error("TODO Handle error " + error))
                 .subscribe();
     }
 
-    private void initAntDevice() throws AntException, InterruptedException, ExecutionException {
+    private void initAntDevice() throws AntException, InterruptedException {
         resetUsbDevice();
 
         CapabilitiesResponseMessage capabilitiesResponseMessage = (CapabilitiesResponseMessage) sendBlocking(RequestMessage.forMessageId(CapabilitiesResponseMessage.MSG_ID));
@@ -250,7 +231,7 @@ public class AntUsbDevice implements Closeable {
         return (UsbInterface) this.device.getActiveUsbConfiguration().getUsbInterfaces().get(0);
     }
 
-    private void closeChannel(byte channelNumber) throws InterruptedException, ExecutionException, AntException {
+    private void closeChannel(byte channelNumber) throws AntException {
         UnassignChannelMessage unassignChannelMessage = new UnassignChannelMessage(channelNumber);
         ChannelEventOrResponseMessage unassignResponseMsg = (ChannelEventOrResponseMessage) sendBlocking(unassignChannelMessage);
         if (unassignResponseMsg.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
@@ -264,42 +245,12 @@ public class AntUsbDevice implements Closeable {
         antUsbWriter.write(antMessage);
     }
 
-    private class GlobalMessageBusListener {
 
-        public boolean handle(AntMessage antMessage) {
-            LOG.debug("GlobalMessageListener: Received {}", antMessage.toString());
-
-            if (antMessage instanceof ChannelEventOrResponseMessage) {
-                ChannelEventOrResponseMessage msg = (ChannelEventOrResponseMessage) antMessage;
-                byte channelNr = msg.getChannelNumber();
-                notifyChannel(channelNr, msg);
-
-                if (msg.getResponseCode() == ChannelEventResponseCode.EVENT_CHANNEL_CLOSED) {
-                    AntUsbDevice.this.antChannels[channelNr] = null;
-                }
-
-            } else if (antMessage instanceof BroadcastDataMessage) {
-                BroadcastDataMessage msg = (BroadcastDataMessage) antMessage;
-                byte channelNumber = msg.getChannelNumber();
-
-                notifyChannel(channelNumber, msg);
-            }
-            return true;
-        }
-
-        private void notifyChannel(byte channelNumber, AntMessage msg) {
-            AntChannel antChannel = getAntChannel(channelNumber);
-            if (antChannel != null) {
-                antChannel.handle(msg);
-            }
-        }
-
-        private AntChannel getAntChannel(byte channelNr) {
-            if (AntUsbDevice.this.antChannels == null) {
-                return null; // can occur @ init time after attaching listener but before acquiring capabilities.
-            }
-            return AntUsbDevice.this.antChannels[channelNr];
-        }
+    public byte[] getAntVersion() {
+        return antVersion;
     }
 
+    public byte[] getSerialNumber() {
+        return serialNumber;
+    }
 }

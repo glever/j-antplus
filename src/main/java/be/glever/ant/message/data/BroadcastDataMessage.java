@@ -11,6 +11,7 @@ import java.util.Arrays;
  * TODO when needed, extend this class further to account for extended data behavior as defined in 7.1.1
  */
 public class BroadcastDataMessage extends AbstractAntMessage {
+    public static final int MSG_ID = 0x4e;
     private byte[] messageContentBytes;
 
     @Override
@@ -25,7 +26,7 @@ public class BroadcastDataMessage extends AbstractAntMessage {
 
     @Override
     public byte getMessageId() {
-        return 0x4e;
+        return MSG_ID;
     }
 
     public byte getChannelNumber() {

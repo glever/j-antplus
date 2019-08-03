@@ -1,4 +1,4 @@
-package be.glever.antplus.hrm.stats;
+package be.glever.anttest.stats;
 
 import be.glever.antplus.hrm.datapage.main.HrmDataPage4PreviousHeartBeatEvent;
 
