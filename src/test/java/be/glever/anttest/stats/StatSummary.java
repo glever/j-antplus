@@ -7,6 +7,7 @@ public class StatSummary {
     private double meanRr;
     private double stdDevRr;
     private double rmssd;
+    private double meanHeartRate;
 
     public void setLastHeartBeat(HrmDataPage4PreviousHeartBeatEvent hrmDataPage4PreviousHeartBeatEvent) {
 
@@ -25,8 +26,9 @@ public class StatSummary {
     @Override
     public String toString() {
         return "StatSummary{" +
-                "currentBeat=" + currentBeat +
+//                "currentBeat=" + currentBeat +
                 ", delta=" + (currentBeat.getHeartBeatEventTime() - currentBeat.getPreviousHeartBeatEventTime()) +
+                ", meanHr=" + meanHeartRate +
                 ", meanRr=" + meanRr +
                 ", stdDevRr=" + stdDevRr +
                 ", rmssd=" + rmssd +
@@ -35,5 +37,10 @@ public class StatSummary {
 
     public void setRmssd(double rmssd) {
         this.rmssd = rmssd;
+    }
+
+    public void setMeanHeartRate(double meanHeartRate) {
+
+        this.meanHeartRate = meanHeartRate;
     }
 }

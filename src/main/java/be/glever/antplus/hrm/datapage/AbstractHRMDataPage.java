@@ -28,7 +28,7 @@ public abstract class AbstractHRMDataPage extends AbstractAntPlusDataPage {
     }
 
     protected double calculateHeartBeatEventTime(byte bite1, byte bite2) {
-        int timeAnt = ByteUtils.fromUShort(bite1, bite2);
+        double timeAnt = ByteUtils.fromUShort(bite1, bite2);
         return (timeAnt / 1024) * 1000;
     }
 

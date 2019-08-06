@@ -21,6 +21,10 @@ public class HrmTest_Main {
 	private HrmDataPageRegistry registry = new HrmDataPageRegistry();
 	private StatCalculator statCalculator = new StatCalculator();
 
+	public static void main(String[] args) throws Exception {
+		new HrmTest_Main();
+	}
+
 	private HrmTest_Main() throws IOException {
 
 		try (AntUsbDevice device = AntUsbDeviceFactory.getAvailableAntDevices().stream().findFirst()
@@ -32,10 +36,6 @@ public class HrmTest_Main {
 			channel.getEventFlux().doOnNext(this::handle).subscribe();
 			System.in.read();
 		}
-	}
-
-	public static void main(String[] args) throws Exception {
-		new HrmTest_Main();
 	}
 
 	private void handle(AntMessage antMessage) {

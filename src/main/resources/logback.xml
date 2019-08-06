@@ -12,7 +12,7 @@
     <!--	<logger name="be.glever.ant.messagebus.MessageBus" level="info"/>-->
     <!--	<logger name="be.glever.antplus.hrm.HRMChannel" level="info"/>-->
     <!--	<logger name="be.glever.ant.message.AntMessageRegistry" level="debug"/>-->
-    <logger name="be.glever" level="debug"/>
+    <logger name="be.glever.anttest.stats" level="debug"/>
 
     <root level="info">
         <appender-ref ref="STDOUT"/>

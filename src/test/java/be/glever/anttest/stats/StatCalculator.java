@@ -1,5 +1,6 @@
 package be.glever.anttest.stats;
 
+import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
 import be.glever.antplus.hrm.datapage.main.HrmDataPage4PreviousHeartBeatEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,69 +12,84 @@ import java.util.List;
  * for fun. push antmessages and retrieve some stats after the push.
  */
 public class StatCalculator {
+    //    public static final long HEARTBEAT_UNITS_SEC = 1 / 1024; // TODO bug. resolves to 0.
+    public static final long HEARTBEAT_ROLLOVER = 64000;
+    public static final long HEARTBEAT_ROLLOVER_IN_MILLIS = 62500; //1000 * (HEARTBEAT_UNITS_SEC * HEARTBEAT_ROLLOVER);
     private static final Logger LOG = LoggerFactory.getLogger(StatCalculator.class);
-
-    public static final int HEARTBEAT_UNITS_SEC = 1 / 1024; // TODO bug. resolves to 0.
-    public static final int HEARTBEAT_ROLLOVER = 64000;
-    public static final int HEARTBEAT_ROLLOVER_IN_MILLIS = 1000 * (HEARTBEAT_UNITS_SEC * HEARTBEAT_ROLLOVER); // 62500
     private List<HrmDataPage4PreviousHeartBeatEvent> heartBeats = new ArrayList<>();
 
+    private static boolean isNewHeartBeatEventTime(HrmDataPage4PreviousHeartBeatEvent page) {
+        return page.getPreviousHeartBeatEventTime() < page.getHeartBeatEventTime();
+    }
+
     public StatSummary push(HrmDataPage4PreviousHeartBeatEvent dataPage) {
-        heartBeats.add(dataPage);
+        if (isNewHeartBeatEventTime(dataPage)) {
+            heartBeats.add(dataPage);
+        }
         return createStatSummary();
     }
 
     private StatSummary createStatSummary() {
         StatSummary statSummary = new StatSummary();
         statSummary.setLastHeartBeat(heartBeats.get(heartBeats.size() - 1));
-        int window = 10;
-        List<HrmDataPage4PreviousHeartBeatEvent> periodHeartBeats = heartBeats.size() < window ? heartBeats : heartBeats.subList(heartBeats.size() - window, heartBeats.size());
 
-        int rmssdListSize = Math.min(heartBeats.size(), 100);
-        List<HrmDataPage4PreviousHeartBeatEvent> rmssdPeriod = heartBeats.subList(heartBeats.size() - rmssdListSize, heartBeats.size());
+        final int listSize = 500;
+        List<HrmDataPage4PreviousHeartBeatEvent> periodHeartBeats = getLast(heartBeats, listSize);
+        List<HrmDataPage4PreviousHeartBeatEvent> rmssdPeriod = getLast(heartBeats, listSize);
 
         double meanRr = calcMeanRr(periodHeartBeats);
         double standardDeviationDelta = calcStdDevRr(periodHeartBeats, meanRr);
+        double rmssd = calcRmssd(periodHeartBeats);
+        double meanHeartRate = periodHeartBeats.stream().mapToDouble(AbstractHRMDataPage::getComputedHeartRateInBpm).average().orElse(0);
+
+//        double meanRr = calcMeanRr(rmssdPeriod);
+//        double standardDeviationDelta = calcStdDevRr(rmssdPeriod, meanRr);
+//        double rmssd = calcRmssd(rmssdPeriod);
 
         statSummary.setMeanRr(meanRr);
         statSummary.setStdDevRr(standardDeviationDelta);
-        statSummary.setRmssd(calcRmssd(rmssdPeriod));
+        statSummary.setRmssd(rmssd);
+        statSummary.setMeanHeartRate(meanHeartRate);
 
         return statSummary;
     }
 
+    private List<HrmDataPage4PreviousHeartBeatEvent> getLast(List<HrmDataPage4PreviousHeartBeatEvent> heartBeats, int slice) {
+        return heartBeats.size() < slice ? heartBeats : heartBeats.subList(heartBeats.size() - slice, heartBeats.size());
+    }
+
     private double calcStdDevRr(List<HrmDataPage4PreviousHeartBeatEvent> periodHeartBeats, double meanDelta) {
-        return periodHeartBeats.stream().filter(page -> page.getPreviousHeartBeatEventTime() < page.getHeartBeatEventTime())
+        return periodHeartBeats.stream()
                 .mapToDouble(page -> Math.abs(meanDelta - (calcRr(page))))
-                .average().getAsDouble();
+                .average()
+                .orElse(0);
     }
 
     private double calcMeanRr(List<HrmDataPage4PreviousHeartBeatEvent> periodHeartBeats) {
         return periodHeartBeats.stream()
                 .mapToDouble(this::calcRr)
                 .average()
-                .getAsDouble();
+                .orElse(0);
     }
 
     private double calcRr(HrmDataPage4PreviousHeartBeatEvent page) {
-        double prevTime = page.getHeartBeatEventTime();
-        double curTime = page.getPreviousHeartBeatEventTime();
+        double curTime = page.getHeartBeatEventTime();
+        double prevTime = page.getPreviousHeartBeatEventTime();
         if (curTime < prevTime) {
-            curTime += HEARTBEAT_ROLLOVER_IN_MILLIS;
+            curTime += HEARTBEAT_ROLLOVER;
         }
         return curTime - prevTime;
     }
 
     private double calcRmssd(List<HrmDataPage4PreviousHeartBeatEvent> periodHeartBeats) {
         double squareSuccessiveDiffs = 0;
-        for (int i = 0; i < periodHeartBeats.size() - 1; i++) {
+        int size = periodHeartBeats.size() - 1;
+        for (int i = 0; i < size; i++) {
             double prevRr = calcRr(periodHeartBeats.get(i));
             double curRr = calcRr(periodHeartBeats.get(i + 1));
             squareSuccessiveDiffs += Math.pow(curRr - prevRr, 2);
         }
-        double meanSquareSuccessiveDiffs = squareSuccessiveDiffs / (periodHeartBeats.size() - 1);
-        double rmssd = Math.sqrt(meanSquareSuccessiveDiffs);
-        LOG.info("calcRmssd: periodHeartBeats.size()={}, meanSquareSuccessiveDiffs={}, rmssd={}", periodHeartBeats.size(), meanSquareSuccessiveDiffs, rmssd);
-        return rmssd;
+        double meanSquareSuccessiveDiffs = squareSuccessiveDiffs / size;
+        return Math.sqrt(meanSquareSuccessiveDiffs);
     }
 }
