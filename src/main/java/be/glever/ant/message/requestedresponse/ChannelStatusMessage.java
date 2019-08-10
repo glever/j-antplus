@@ -35,7 +35,7 @@ public class ChannelStatusMessage extends AbstractAntMessage {
         return CHANNEL_STATUS.fromValue(bytes[1]);
     }
 
-    public static enum CHANNEL_STATUS {
+    public enum CHANNEL_STATUS {
         UnAssigned, Assigned, Searching, Tracking;
 
         public static CHANNEL_STATUS fromValue(byte value) {

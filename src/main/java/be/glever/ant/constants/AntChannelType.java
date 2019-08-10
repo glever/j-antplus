@@ -10,7 +10,7 @@ public enum AntChannelType {
 
     private byte value;
 
-    private AntChannelType(int value) {
+    AntChannelType(int value) {
         this.value = (byte) value;
     }
 

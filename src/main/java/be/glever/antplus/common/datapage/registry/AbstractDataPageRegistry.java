@@ -40,7 +40,7 @@ public abstract class AbstractDataPageRegistry {
         this.registry.put(pageNumber, builder);
     }
 
-    public static interface DataPageBuilder {
+    public interface DataPageBuilder {
         AbstractAntPlusDataPage construct(byte[] bytes);
     }
 }

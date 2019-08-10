@@ -5,7 +5,7 @@ public class DataPage76ModeSettingsCommand extends AbstractAntPlusDataPage {
     public static final byte PAGE_NR = 76;
 
     public enum SPORT_MODE {
-        RUNNING, CYCLING, SWIMMING;
+        RUNNING, CYCLING, SWIMMING
     }
 
     public DataPage76ModeSettingsCommand(byte[] dataPageBytes) {
