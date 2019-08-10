@@ -28,6 +28,6 @@ public class HrmDataPage4PreviousHeartBeatEvent extends AbstractHRMDataPage {
 
     @Override
     public String toString() {
-        return getClass().getName() + "{" + super.getToString() + ",previousEventTime=" + getPreviousHeartBeatEventTime() + "}";
+        return getClass().getSimpleName() + "{" + super.getToString() + ",previousEventTime=" + getPreviousHeartBeatEventTime() + "}";
     }
 }

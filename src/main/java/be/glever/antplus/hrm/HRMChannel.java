@@ -11,15 +11,14 @@ import be.glever.ant.message.AntMessage;
 import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
 import be.glever.ant.message.data.BroadcastDataMessage;
 import be.glever.ant.util.ByteUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import be.glever.util.logging.Log;
 import reactor.core.publisher.Flux;
 
 public class HRMChannel extends AntChannel {
     public static final byte CHANNEL_FREQUENCY = 0x39;
     public static final byte[] DEVICE_NUMBER_WILDCARD = {0x00, 0x00};
     public static final byte DEFAULT_PUBLIC_NETWORK = 0x00;
-    private static final Logger LOG = LoggerFactory.getLogger(HRMChannel.class);
+    private static final Log LOG = Log.getLogger(HRMChannel.class);
     byte[] CHANNEL_PERIOD = ByteUtils.toUShort(8070);
 
     // todo doesnt belong here

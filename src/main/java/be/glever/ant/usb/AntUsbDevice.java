@@ -15,9 +15,8 @@ import be.glever.ant.message.requestedresponse.CapabilitiesResponseMessage;
 import be.glever.ant.message.requestedresponse.ChannelStatusMessage;
 import be.glever.ant.message.requestedresponse.SerialNumberMessage;
 import be.glever.ant.util.ByteUtils;
+import be.glever.util.logging.Log;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.*;
 import reactor.core.scheduler.Schedulers;
 
@@ -27,6 +26,8 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 
+import static java.lang.String.format;
+
 /**
  * Provides abstraction of and interaction with an ANT USB dongle.
  * Clients can
@@ -34,7 +35,7 @@ import java.util.List;
 public class AntUsbDevice implements Closeable {
     private static final int SLEEP_AFTER_RESET = 500;
     private static final long DEFAULT_TIMEOUT = 1000;
-    private static Logger LOG = LoggerFactory.getLogger(AntUsbDevice.class);
+    private static Log LOG = Log.getLogger(AntUsbDevice.class);
     private final FluxProcessor<AntMessage, AntMessage> antMessageProcessor = DirectProcessor.<AntMessage>create().serialize();
     private final FluxSink<AntMessage> antMessageSink = antMessageProcessor.sink();
     private final FluxProcessor<Throwable, Throwable> errorProcessor = DirectProcessor.<Throwable>create().serialize();
@@ -59,7 +60,7 @@ public class AntUsbDevice implements Closeable {
     }
 
     private static Publisher<AntMessage> mapToErrorIfRequired(AntMessage antMessage) {
-        LOG.debug("in flux, received message {}", antMessage);
+        LOG.debug(() -> format("in flux, received message %s", antMessage));
         if (antMessage instanceof ChannelEventOrResponseMessage) {
             ChannelEventOrResponseMessage channelEventOrResponseMessage = (ChannelEventOrResponseMessage) antMessage;
             if (channelEventOrResponseMessage.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
@@ -84,7 +85,7 @@ public class AntUsbDevice implements Closeable {
         try {
             resetUsbDevice();
         } catch (Exception e) {
-            LOG.error("Reset ant stick failed. Continuing with shutdown of usb interface.", e);
+            LOG.error(() -> "Reset ant stick failed. Continuing with shutdown of usb interface.", e);
         }
 
         try {
@@ -105,7 +106,7 @@ public class AntUsbDevice implements Closeable {
             ChannelStatusMessage responseMessage = (ChannelStatusMessage) sendBlocking(requestMessage);
             byte channelNumber = responseMessage.getChannelNumber();
             ChannelStatusMessage.CHANNEL_STATUS channelStatus = responseMessage.getChannelStatus();
-            LOG.debug("Channel {} is in state {}.", channelNumber, channelStatus);
+            LOG.debug(() -> format("Channel %s is in state %s.", channelNumber, channelStatus));
 
             switch (channelStatus) {
                 case UnAssigned:
@@ -199,7 +200,7 @@ public class AntUsbDevice implements Closeable {
                 .subscribe();
 
         this.errorProcessor.doOnNext(
-                error -> LOG.error("TODO Handle error " + error))
+                error -> LOG.error(() -> "TODO Handle error " + error))
                 .subscribe();
     }
 
@@ -216,9 +217,9 @@ public class AntUsbDevice implements Closeable {
         SerialNumberMessage serialNumberMessage = (SerialNumberMessage) sendBlocking(RequestMessage.forMessageId(SerialNumberMessage.MSG_ID));
         this.serialNumber = serialNumberMessage.getSerialNumber();
 
-        LOG.debug("Capabilities: {}", this.capabilities.toString());
-        LOG.debug("Ant Version: {}", ByteUtils.hexString(this.antVersion));
-        LOG.debug("SerialNumber: {}", ByteUtils.hexString(this.serialNumber));
+        LOG.debug(() -> format("Capabilities: %s", this.capabilities.toString()));
+        LOG.debug(() -> format("Ant Version: %s", ByteUtils.hexString(this.antVersion)));
+        LOG.debug(() -> format("SerialNumber: %s", ByteUtils.hexString(this.serialNumber)));
     }
 
     private void resetUsbDevice() throws InterruptedException {
@@ -235,10 +236,10 @@ public class AntUsbDevice implements Closeable {
         UnassignChannelMessage unassignChannelMessage = new UnassignChannelMessage(channelNumber);
         ChannelEventOrResponseMessage unassignResponseMsg = (ChannelEventOrResponseMessage) sendBlocking(unassignChannelMessage);
         if (unassignResponseMsg.getResponseCode() != ChannelEventResponseCode.RESPONSE_NO_ERROR) {
-            LOG.debug("Received unexpected message {}. Halting program.", unassignResponseMsg);
+            LOG.debug(() -> format("Received unexpected message %s. Halting program.", unassignResponseMsg));
             throw new AntException("Could not close channel " + channelNumber);
         }
-        LOG.debug("Successfully unassigned channel {}.", channelNumber);
+        LOG.debug(() -> format("Successfully unassigned channel %s.", channelNumber));
     }
 
     public void send(AntMessage antMessage) {

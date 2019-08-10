@@ -23,4 +23,10 @@ public class HrmDataPage2ManufacturerInformation extends AbstractHRMDataPage {
     public byte getPageNumber() {
         return PAGE_NR;
     }
+
+
+    @Override
+    public String toString() {
+        return String.format("%s, {%s, ManufacturerId=%s, SerialNumber=%s}", getClass().getSimpleName(), super.getToString(), getManufacturerId(), getSerialNumber());
+    }
 }

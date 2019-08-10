@@ -2,8 +2,7 @@ package be.glever.anttest.stats;
 
 import be.glever.antplus.hrm.datapage.AbstractHRMDataPage;
 import be.glever.antplus.hrm.datapage.main.HrmDataPage4PreviousHeartBeatEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import be.glever.util.logging.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,7 @@ public class StatCalculator {
     //    public static final long HEARTBEAT_UNITS_SEC = 1 / 1024; // TODO bug. resolves to 0.
     public static final long HEARTBEAT_ROLLOVER = 64000;
     public static final long HEARTBEAT_ROLLOVER_IN_MILLIS = 62500; //1000 * (HEARTBEAT_UNITS_SEC * HEARTBEAT_ROLLOVER);
-    private static final Logger LOG = LoggerFactory.getLogger(StatCalculator.class);
+    private static final Log LOG = Log.getLogger(StatCalculator.class);
     private List<HrmDataPage4PreviousHeartBeatEvent> heartBeats = new ArrayList<>();
 
     private static boolean isNewHeartBeatEventTime(HrmDataPage4PreviousHeartBeatEvent page) {

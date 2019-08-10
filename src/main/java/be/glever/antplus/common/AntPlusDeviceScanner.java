@@ -11,16 +11,17 @@ import be.glever.ant.message.requestedresponse.ChannelStatusMessage;
 import be.glever.ant.usb.AntUsbDevice;
 import be.glever.ant.usb.AntUsbDeviceCapabilities;
 import be.glever.antplus.hrm.HRMChannel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import be.glever.util.logging.Log;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import static java.lang.String.format;
+
 
 public class AntPlusDeviceScanner {
-    private static final Logger LOG = LoggerFactory.getLogger(AntPlusDeviceScanner.class);
+    private static final Log LOG = Log.getLogger(AntPlusDeviceScanner.class);
 
     private AntUsbDevice antUsbDevice;
 
@@ -49,7 +50,7 @@ public class AntPlusDeviceScanner {
             if (responseMessage.getChannelStatus() == ChannelStatusMessage.CHANNEL_STATUS.UnAssigned) {
                 // scan channel for ant device
             } else {
-                LOG.debug("Channel {} is in status {}. Not scanning.", responseMessage.getChannelNumber(), responseMessage.getChannelStatus());
+                LOG.debug(() -> format("Channel %s is in status %s. Not scanning.", responseMessage.getChannelNumber(), responseMessage.getChannelStatus()));
             }
         }
 

@@ -1,7 +1,6 @@
 package be.glever.ant.messagebus;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import be.glever.util.logging.Log;
 
 import java.io.Closeable;
 import java.util.ArrayList;
@@ -12,6 +11,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static java.lang.String.format;
+
 /**
  * Small messagebus implementation using a blocking queue. Messages are
  * dispatched by a single dedicated thread meaning listeners run sequentially.
@@ -20,7 +21,7 @@ import java.util.stream.StreamSupport;
  * @author glen
  */
 public class MessageBus<T> implements Closeable {
-    private static final Logger LOG = LoggerFactory.getLogger(MessageBus.class);
+    private static final Log LOG = Log.getLogger(MessageBus.class);
 
     private LinkedBlockingQueue<QueueElement<T>> queue;
     private List<ListenerConfig<T>> listenerConfigs = new ArrayList<>();
@@ -31,7 +32,7 @@ public class MessageBus<T> implements Closeable {
     }
 
     private void notifyListeners(T item) {
-        LOG.debug("Received {}", item);
+        LOG.debug(() -> format("Received %s", item));
 
         // removes listeners that are in timeout + sends message to other listeners and removes listeners which no longer want to process new messages
         listenerConfigs.removeAll(new ArrayList<>(this.listenerConfigs).stream()
@@ -50,9 +51,7 @@ public class MessageBus<T> implements Closeable {
     }
 
     private void put(T t, boolean poison) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("put({}), poison: {}", t, poison);
-        }
+        LOG.debug(() -> format("put(%s), poison: %s", t, poison));
         this.queue.offer(new QueueElement<>(t, poison));
 
     }
@@ -75,6 +74,14 @@ public class MessageBus<T> implements Closeable {
         this.listenerConfigs.add(new ListenerConfig<>(listener, timeout, nrMessages));
     }
 
+    /**
+     * Shuts down the message dispatch thread.
+     */
+    @Override
+    public void close() {
+        put(null, true);
+    }
+
     private static class ListenerConfig<T> {
         private MessageBusListener<T> listener;
         private long timeoutTime;
@@ -87,14 +94,12 @@ public class MessageBus<T> implements Closeable {
         }
 
         public boolean timeoutOccurred() {
-            return this.timeoutTime > -1 ? System.currentTimeMillis() > timeoutTime : false;
+            return this.timeoutTime > -1 && System.currentTimeMillis() > timeoutTime;
         }
 
         public boolean handledLastMessage(T item) {
             boolean handledMessage = listener.handle(item) && (nrMessages > 0 && --nrMessages == 0);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("listener {} handled the message {}: {}", listener, item, handledMessage);
-            }
+            LOG.debug(() -> format("listener %s handled the message %s: %s", listener, item, handledMessage));
             return handledMessage;
         }
     }
@@ -154,11 +159,11 @@ public class MessageBus<T> implements Closeable {
                     action.accept(t.get());
                     return true;
                 } else {
-                    LOG.info("received poison message, stopping");
+                    LOG.info(() -> "received poison message, stopping");
                 }
             } catch (InterruptedException e) {
                 Thread.interrupted();
-                LOG.info("Interrupted, only reason would be to stop consuming");
+                LOG.info(() -> "Interrupted, only reason would be to stop consuming");
             }
             return false;
         }
@@ -178,14 +183,6 @@ public class MessageBus<T> implements Closeable {
             return Spliterator.ORDERED;
         }
 
-    }
-
-    /**
-     * Shuts down the message dispatch thread.
-     */
-    @Override
-    public void close() {
-        put(null, true);
     }
 
 }

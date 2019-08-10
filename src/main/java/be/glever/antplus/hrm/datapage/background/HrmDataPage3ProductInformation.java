@@ -26,4 +26,9 @@ public class HrmDataPage3ProductInformation extends AbstractHRMDataPage {
     public byte getPageNumber() {
         return PAGE_NR;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s, {%s, HardwareVersion=%s, SoftwareVersion=%s, ModelNumber=%s}", getClass().getSimpleName(), super.getToString(), getHardwareVersion(), getSoftwareVersion(), getModelNumber());
+    }
 }

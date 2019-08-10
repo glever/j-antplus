@@ -3,8 +3,7 @@ package be.glever.ant.usb;
 import be.glever.ant.message.AntMessage;
 import be.glever.ant.message.AntMessageRegistry;
 import be.glever.ant.util.ByteUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import be.glever.util.logging.Log;
 import reactor.core.publisher.DirectProcessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxProcessor;
@@ -13,6 +12,8 @@ import reactor.core.publisher.FluxSink;
 import javax.usb.UsbPipe;
 import javax.usb.util.DefaultUsbIrp;
 
+import static java.lang.String.format;
+
 /**
  * Reads an {@link UsbPipe} and parses the bytestream to {@link AntMessage}s
  * which can then be retrieved through {@link #antMessages()}().
@@ -20,12 +21,12 @@ import javax.usb.util.DefaultUsbIrp;
  * @author glen
  */
 public class AntUsbReader implements Runnable {
-    private static final Logger LOG = LoggerFactory.getLogger(AntUsbReader.class);
     public static final byte SYNC = (byte) 0xa4;
-    private UsbPipe inPipe;
-    private boolean stop = false;
+    private static final Log LOG = Log.getLogger(AntUsbReader.class);
     private final FluxProcessor<AntMessage, AntMessage> usbMessageProcessor = DirectProcessor.<AntMessage>create().serialize();
     private final FluxSink<AntMessage> usbMessageSink = usbMessageProcessor.sink();
+    private UsbPipe inPipe;
+    private boolean stop = false;
 
     public AntUsbReader(UsbPipe inPipe) {
         this.inPipe = inPipe;
@@ -46,19 +47,17 @@ public class AntUsbReader implements Runnable {
                         Thread.interrupted();
                     }
                 } else {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Read {} bytes", ByteUtils.hexString(buffer));
-                    }
+                    LOG.debug(() -> format("Read %s bytes", ByteUtils.hexString(buffer)));
                     if (buffer[0] == SYNC) {
                         usbMessageSink.next(AntMessageRegistry.from(buffer));
                     } else {
                         // if this happens too much, treat buffer as 'sliding window' instead of only relying on first byte
-                        LOG.warn("Buffer {} didn't start with sync byte. Ignoring...", ByteUtils.hexString(buffer));
+                        LOG.warn(() -> format("Buffer %s didn't start with sync byte. Ignoring...", ByteUtils.hexString(buffer)));
                     }
                 }
             }
         } catch (Throwable t) {
-            LOG.error("Fatal error reading from usb device " + t.getMessage(), t);
+            LOG.error(() -> "Fatal error reading from usb device " + t.getMessage(), t);
         }
         usbMessageSink.complete();
     }

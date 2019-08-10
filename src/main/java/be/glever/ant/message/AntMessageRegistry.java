@@ -12,19 +12,20 @@ import be.glever.ant.message.requestedresponse.CapabilitiesResponseMessage;
 import be.glever.ant.message.requestedresponse.ChannelStatusMessage;
 import be.glever.ant.message.requestedresponse.SerialNumberMessage;
 import be.glever.ant.util.ByteUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import be.glever.util.logging.Log;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.String.format;
+
 /**
  * Container and factory for all known antmessages.
  */
 public class AntMessageRegistry {
-    private static final Logger LOG = LoggerFactory.getLogger(AntMessageRegistry.class);
+    private static final Log LOG = Log.getLogger(AntMessageRegistry.class);
     private static Map<Byte, Class<? extends AbstractAntMessage>> registry = new HashMap<>();
 
     static {
@@ -69,23 +70,28 @@ public class AntMessageRegistry {
      * @param bytes
      * @return
      */
-    public static AntMessage from(byte[] bytes) throws AntException {
+    public static AntMessage from(final byte[] bytes) throws AntException {
         byte msgLength = (byte) (bytes[1] + 4);// sync, msglen, msgid and checksum excluded
         byte msgId = bytes[2];
-        bytes = Arrays.copyOf(bytes, msgLength);
+        final byte[] msgBytes = Arrays.copyOf(bytes, msgLength);
 
         Class<? extends AbstractAntMessage> messageClass = registry.get(msgId);
-        AntMessage messageInstance = null;
+        final AntMessage messageInstance = getMessageInstance(msgBytes, msgId, msgBytes, messageClass);
+
+        LOG.debug(() -> format("Converted %s to %s", ByteUtils.hexString(msgBytes), messageInstance.getClass().getSimpleName()));
+        return messageInstance;
+    }
+
+    private static AntMessage getMessageInstance(byte[] bytes, byte msgId, byte[] msgBytes, Class<? extends AbstractAntMessage> messageClass) {
+        AntMessage messageInstance;
         if (messageClass == null) {
-            LOG.error("Could not convert {} to an AntMessage. Bytes received were {}", ByteUtils.hexString(msgId),
-                    ByteUtils.hexString(bytes));
+            LOG.error(() -> format("Could not convert %s to an AntMessage. Bytes received were %s", ByteUtils.hexString(msgId),
+                    ByteUtils.hexString(msgBytes)));
             messageInstance = new UnknownMessage(bytes);
         } else {
             messageInstance = instantiate(messageClass);
             messageInstance.parse(bytes);
         }
-
-        LOG.debug("Converted {} to {}", ByteUtils.hexString(bytes), messageInstance.getClass().getSimpleName());
         return messageInstance;
     }
 
@@ -94,7 +100,7 @@ public class AntMessageRegistry {
         if (registry.containsKey(messageId)) {
             Class<? extends AbstractAntMessage> existingClass = registry.get(messageId);
             throw new IllegalStateException(
-                    String.format("Could not add class %s to registry due to duplicate id %s. Conflicting class: %s",
+                    format("Could not add class %s to registry due to duplicate id %s. Conflicting class: %s",
                             antMessageImplClass, messageId, existingClass));
         }
         registry.put(messageId, antMessageImplClass);
