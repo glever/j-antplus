@@ -24,7 +24,7 @@ public enum ChannelEventResponseCode {
     INVALID_MESSAGE((byte) 0x28),
     INVALID_NETWORK_NUMBER((byte) 0x29),
     INVALID_LIST_ID((byte) 0x30),
-    INVALID_SCAN_TX_CHANNEL((byte) 031),
+    INVALID_SCAN_TX_CHANNEL((byte) 0x31),
     INVALID_PARAMETER_PROVIDED((byte) 0x33),
     EVENT_SERIAL_QUEUE_OVERFLOW((byte) 0x34),
     EVENT_QUEUE_OVERFLOW((byte) 0x35),

@@ -1,8 +1,7 @@
 package be.glever.ant.message.requestedresponse;
 
-import org.junit.Test;
-
 import be.glever.ant.AntException;
+import org.junit.Test;
 
 public class CapabilitiesResponseMessageTest {
 
@@ -10,10 +9,9 @@ public class CapabilitiesResponseMessageTest {
 
 	@Test
 	public void parseMusbCapabilities() throws AntException {
-		byte[] message = M_USB_CAPABILITIES;
-		
+
 		CapabilitiesResponseMessage msg = new CapabilitiesResponseMessage();
-		msg.parse(message);
+		msg.parse(M_USB_CAPABILITIES);
 //		System.out.println(msg.toString());
 	}
 }

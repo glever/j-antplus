@@ -32,7 +32,7 @@ public class HrmDataPage7BatteryStatus extends AbstractHRMDataPage {
     public int getBatteryLevelPercentage() {
         byte batteryLevelByte = getPageSpecificBytes()[0];
 
-        return batteryLevelByte == 0xFF ? -1 : toInt(batteryLevelByte);
+        return batteryLevelByte == (byte) 0xFF ? -1 : toInt(batteryLevelByte);
     }
 
     /**
@@ -56,7 +56,6 @@ public class HrmDataPage7BatteryStatus extends AbstractHRMDataPage {
             case 4:
                 return ANT_HRM_BATTERY_LEVEL.LOW;
             case 5:
-                return ANT_HRM_BATTERY_LEVEL.CRITICAL;
             default:
                 return ANT_HRM_BATTERY_LEVEL.CRITICAL;
         }

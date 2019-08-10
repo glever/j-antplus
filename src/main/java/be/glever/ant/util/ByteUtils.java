@@ -68,8 +68,7 @@ public class ByteUtils {
     }
 
     public static int fromUShort(byte bite0, byte bite1) {
-        int val = (0xFF & bite0) | ((0xFF & bite1) << 8);
-        return val;
+        return (0xFF & bite0) | ((0xFF & bite1) << 8);
     }
 
     public static int fromUnsignedBytes(byte[] bytes) {

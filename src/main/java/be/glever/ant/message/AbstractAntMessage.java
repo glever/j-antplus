@@ -8,8 +8,6 @@ import java.util.Arrays;
 
 public abstract class AbstractAntMessage implements AntMessage {
 
-    private byte sync = (byte) 0xa4; // TODO synchronous mode (0xa5 used for WRITE mode) is currently unsupported
-
     public abstract byte[] getMessageContent();
 
     public abstract void setMessageBytes(byte[] messageContentBytes) throws AntException;
@@ -19,6 +17,8 @@ public abstract class AbstractAntMessage implements AntMessage {
         byte[] messageContent = getMessageContent();
 
         ByteArrayBuilder bab = new ByteArrayBuilder();
+        // TODO synchronous mode (0xa5 used for WRITE mode) is currently unsupported
+        byte sync = (byte) 0xa4;
         bab.write(sync);
         bab.write((byte) messageContent.length);
         bab.write(getMessageId());
