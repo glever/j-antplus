@@ -59,7 +59,7 @@ public class HrmTest_Main {
 
             StatSummary statSummary = this.statCalculator.push(dataPage);
 
-//			LOG.info(statSummary.toString());
+            LOG.info(statSummary::toString);
         }
     }
 

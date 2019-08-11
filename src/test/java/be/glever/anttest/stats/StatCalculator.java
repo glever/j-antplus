@@ -50,6 +50,7 @@ public class StatCalculator {
         statSummary.setRmssd(rmssd);
         statSummary.setMeanHeartRate(meanHeartRate);
 
+        LOG.debug(statSummary::toString);
         return statSummary;
     }
 

@@ -14,6 +14,8 @@ import be.glever.ant.util.ByteUtils;
 import be.glever.util.logging.Log;
 import reactor.core.publisher.Flux;
 
+import java.util.Arrays;
+
 public class HRMChannel extends AntChannel {
     public static final byte CHANNEL_FREQUENCY = 0x39;
     public static final byte[] DEVICE_NUMBER_WILDCARD = {0x00, 0x00};
@@ -49,7 +51,9 @@ public class HRMChannel extends AntChannel {
 
     @Override
     public void subscribeTo(Flux<AntMessage> messageFlux) {
-        eventFlux = messageFlux.filter(this::isMatchingAntMessage);
+        eventFlux = messageFlux
+                .filter(this::isMatchingAntMessage)
+                .distinctUntilChanged(AntMessage::toByteArray, Arrays::equals);
     }
 
     public Flux<AntMessage> getEventFlux() {
