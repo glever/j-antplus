@@ -7,8 +7,9 @@ import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
 import be.glever.ant.util.ByteArrayBuilder;
 
 public class AssignChannelMessage extends AbstractAntMessage implements AntBlockingMessage {
-
+    public static final int MSG_ID = 0x42;
     private byte channelNumber;
+
     private byte channelType;
     private byte networkNumber;
     private Byte extendedAssignment; // optional
@@ -29,7 +30,7 @@ public class AssignChannelMessage extends AbstractAntMessage implements AntBlock
 
     @Override
     public byte getMessageId() {
-        return 0x42;
+        return MSG_ID;
     }
 
     @Override

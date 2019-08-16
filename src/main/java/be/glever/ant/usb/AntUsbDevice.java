@@ -25,6 +25,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.function.BiFunction;
 
 import static java.lang.String.format;
 
@@ -55,9 +56,6 @@ public class AntUsbDevice implements Closeable {
         this.device = device;
     }
 
-    private static boolean forceClaim(UsbInterface usbInterface1) {
-        return true;
-    }
 
     private static Publisher<AntMessage> mapToErrorIfRequired(AntMessage antMessage) {
         LOG.debug(() -> format("in flux, received message %s", antMessage));
@@ -68,6 +66,10 @@ public class AntUsbDevice implements Closeable {
             }
         }
         return Flux.just(antMessage);
+    }
+
+    private static boolean forceClaim(UsbInterface usbInterface) {
+        return true;
     }
 
     public void initialize() throws AntException {
@@ -99,6 +101,9 @@ public class AntUsbDevice implements Closeable {
         }
     }
 
+    /**
+     * Closes any channel still open between the stick and ant devices.
+     */
     public void closeAllChannels() throws AntException {
         short maxChannels = capabilities.getMaxChannels();
         for (int i = 0; i < maxChannels; i++) {
@@ -124,22 +129,56 @@ public class AntUsbDevice implements Closeable {
         return capabilities;
     }
 
-    public void openChannel(AntChannel channel) {
+    public Mono<Boolean> openChannel(AntChannel channel) {
 
         byte channelNumber = getAvailableChannelNumber();
 
-        sendBlocking(new NetworkKeyMessage(channelNumber, channel.getNetwork().getNetworkKey()));
-        sendBlocking(new AssignChannelMessage(channelNumber, channel.getChannelType().getValue(), channel.getNetwork().getNetworkNumber()));
-        sendBlocking(new ChannelIdMessage(channelNumber, channel.getChannelId().getDeviceNumber(), channel.getChannelId().getDeviceType(), channel.getChannelId().getTransmissionType().getValue()));
-        sendBlocking(new ChannelPeriodMessage(channelNumber, channel.getChannelPeriod()));
-        sendBlocking(new ChannelRfFrequencyMessage(channelNumber, channel.getRfFrequency()));
-        sendBlocking(new OpenChannelMessage(channelNumber));
-
-        this.antChannels[channelNumber] = channel;
-        channel.setChannelNumber(channelNumber);
-        channel.subscribeTo(this.antMessageProcessor);
+        BiFunction<AntMessage, AntMessage, Boolean> responseMatcher = RequestMatcher::isMatchingResponse;
+        return send(new NetworkKeyMessage(channelNumber, channel.getNetwork().getNetworkKey()), responseMatcher)
+                .flatMap(response -> send(new AssignChannelMessage(channelNumber, channel.getChannelType().getValue(), channel.getNetwork().getNetworkNumber()), responseMatcher))
+                .flatMap(response -> send(new ChannelIdMessage(channelNumber, channel.getChannelId().getDeviceNumber(), channel.getChannelId().getDeviceType(), channel.getChannelId().getTransmissionType().getValue()), responseMatcher))
+                .flatMap(response -> send(new ChannelPeriodMessage(channelNumber, channel.getChannelPeriod()), responseMatcher))
+                .flatMap(response -> send(new ChannelRfFrequencyMessage(channelNumber, channel.getRfFrequency()), responseMatcher))
+                .flatMap(response -> send(new OpenChannelMessage(channelNumber), responseMatcher))
+                .flatMap(response -> {
+                    this.antChannels[channelNumber] = channel;
+                    channel.setChannelNumber(channelNumber);
+                    channel.subscribeTo(this.antMessageProcessor);
+                    return Mono.just(Boolean.TRUE);
+                });
     }
 
+    /**
+     * Sends a message to the usb stick.
+     *
+     * @param antMessage The message to send.
+     */
+    public void send(AntMessage antMessage) {
+        antUsbWriter.write(antMessage);
+    }
+
+    /**
+     * Returns a Mono containing the response for a given request. Note that the request is not sent unless subscribed to the Publisher.
+     *
+     * @param requestMessage The message to send.
+     */
+    public Mono<AntMessage> send(AntMessage requestMessage, BiFunction<AntMessage, AntMessage, Boolean> responseFilter) {
+        Flux<AntMessage> response = this.antMessageProcessor
+                .filter(responseMessage -> responseFilter.apply(requestMessage, responseMessage))
+                .concatMap(AntUsbDevice::mapToErrorIfRequired);
+
+        Mono<Void> messageSender = Mono.fromRunnable(() -> this.antUsbWriter.write(requestMessage));
+        return Flux.merge(response, messageSender).map(antMessage -> (AntMessage) antMessage).next();
+    }
+
+    /**
+     * Sends a message and blocks current thread until it's expected response is returned.
+     *
+     * @param requestMessage
+     * @return
+     * @deprecated Best to comnbine sending through {@link #send(AntMessage)} and listening on # instead.
+     */
+    @Deprecated
     public AntMessage sendBlocking(AntBlockingMessage requestMessage) {
         Flux<AntMessage> response = this.antMessageProcessor
                 .filter(responseMessage -> RequestMatcher.isMatchingResponse(requestMessage, responseMessage))
@@ -148,6 +187,14 @@ public class AntUsbDevice implements Closeable {
 
         Mono<Void> messageSender = Mono.fromRunnable(() -> this.antUsbWriter.write(requestMessage));
         return (AntMessage) Flux.merge(response, messageSender).blockFirst(Duration.ofSeconds(10));
+    }
+
+    public byte[] getAntVersion() {
+        return antVersion;
+    }
+
+    public byte[] getSerialNumber() {
+        return serialNumber;
     }
 
     private byte getAvailableChannelNumber() {
@@ -187,7 +234,6 @@ public class AntUsbDevice implements Closeable {
         antUsbReader = new AntUsbReader(inPipe);
         new Thread(antUsbReader, "ant-usb-reader").start();
         antUsbWriter = new AntUsbWriter(usbOutPipe);
-
         subscribeTo(antUsbReader);
     }
 
@@ -240,18 +286,5 @@ public class AntUsbDevice implements Closeable {
             throw new AntException("Could not close channel " + channelNumber);
         }
         LOG.debug(() -> format("Successfully unassigned channel %s.", channelNumber));
-    }
-
-    public void send(AntMessage antMessage) {
-        antUsbWriter.write(antMessage);
-    }
-
-
-    public byte[] getAntVersion() {
-        return antVersion;
-    }
-
-    public byte[] getSerialNumber() {
-        return serialNumber;
     }
 }

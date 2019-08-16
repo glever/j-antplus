@@ -22,7 +22,7 @@ public class HRMSlave {
     }
 
     public AntChannel[] listDevices() throws AntException, ExecutionException, InterruptedException {
-        HRMChannel channel = new HRMChannel();
+        HRMChannel channel = new HRMChannel(antUsbDevice);
 
         byte channelNumber = 0x00;
 

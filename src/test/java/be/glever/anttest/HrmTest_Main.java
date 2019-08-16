@@ -26,9 +26,8 @@ public class HrmTest_Main {
                 .orElseThrow(() -> new IllegalStateException("No devices found"))) {
             device.initialize();
             device.closeAllChannels(); // channels stay open on usb dongle even if program shuts down.
-            HRMChannel channel = new HRMChannel();
-            device.openChannel(channel);
-            channel.getEventFlux().doOnNext(this::handle).subscribe();
+            HRMChannel channel = new HRMChannel(device);
+            channel.getEvents().doOnNext(this::handle).subscribe();
             System.in.read();
         }
     }
@@ -48,6 +47,8 @@ public class HrmTest_Main {
             if (dataPage instanceof HrmDataPage4PreviousHeartBeatEvent) {
                 calcStats((HrmDataPage4PreviousHeartBeatEvent) dataPage);
             }
+        } else {
+//            LOG.warn(()->format("Ignoring message  %s", antMessage));
         }
     }
 

@@ -7,6 +7,7 @@ import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
 
 public class ChannelIdMessage extends AbstractAntMessage implements AntBlockingMessage {
 
+    public static final int MSG_ID = 0x51;
     private byte[] bytes;
 
     public ChannelIdMessage() {
@@ -34,7 +35,7 @@ public class ChannelIdMessage extends AbstractAntMessage implements AntBlockingM
 
     @Override
     public byte getMessageId() {
-        return 0x51;
+        return MSG_ID;
     }
 
     @Override

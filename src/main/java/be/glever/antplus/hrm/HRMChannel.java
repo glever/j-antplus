@@ -9,11 +9,15 @@ import be.glever.ant.constants.AntNetworkKeys;
 import be.glever.ant.constants.AntPlusDeviceType;
 import be.glever.ant.message.AntMessage;
 import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
+import be.glever.ant.message.data.AchnowledgeDataMessage;
 import be.glever.ant.message.data.BroadcastDataMessage;
+import be.glever.ant.usb.AntUsbDevice;
 import be.glever.ant.util.ByteUtils;
+import be.glever.antplus.hrm.datapage.background.HrmDataPage6Capabilities;
 import be.glever.util.logging.Log;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.util.Arrays;
 
 public class HRMChannel extends AntChannel {
@@ -21,6 +25,7 @@ public class HRMChannel extends AntChannel {
     public static final byte[] DEVICE_NUMBER_WILDCARD = {0x00, 0x00};
     public static final byte DEFAULT_PUBLIC_NETWORK = 0x00;
     private static final Log LOG = Log.getLogger(HRMChannel.class);
+    private final AntUsbDevice device;
     byte[] CHANNEL_PERIOD = ByteUtils.toUShort(8070);
 
     // todo doesnt belong here
@@ -31,22 +36,28 @@ public class HRMChannel extends AntChannel {
 
     /**
      * Pair with any (the first found) HRM.
+     *
+     * @param device
      */
-    public HRMChannel() {
-        this(DEVICE_NUMBER_WILDCARD);
+    public HRMChannel(AntUsbDevice device) {
+        this(device, DEVICE_NUMBER_WILDCARD);
     }
 
     /**
      * Pair with a known device.
      *
+     * @param device
      * @param deviceNumber
      */
-    public HRMChannel(byte[] deviceNumber) {
+    public HRMChannel(AntUsbDevice device, byte[] deviceNumber) {
+        this.device = device;
         setChannelType(AntChannelType.BIDIRECTIONAL_SLAVE);
         setNetwork(new AntChannelNetwork(DEFAULT_PUBLIC_NETWORK, AntNetworkKeys.ANT_PLUS_NETWORK_KEY));
         setRfFrequency(CHANNEL_FREQUENCY);
         setChannelId(new AntChannelId(AntChannelTransmissionType.PAIRING_TRANSMISSION_TYPE, AntPlusDeviceType.HRM, deviceNumber));
         setChannelPeriod(CHANNEL_PERIOD);
+
+        this.device.openChannel(this).block(Duration.ofSeconds(10));
     }
 
     @Override
@@ -54,9 +65,16 @@ public class HRMChannel extends AntChannel {
         eventFlux = messageFlux
                 .filter(this::isMatchingAntMessage)
                 .distinctUntilChanged(AntMessage::toByteArray, Arrays::equals);
+
+//        messageFlux.take(1).subscribe(message -> requestHrmInfo());
     }
 
-    public Flux<AntMessage> getEventFlux() {
+    private void requestHrmInfo() {
+        this.device.send(new AchnowledgeDataMessage(this.getChannelNumber(), HrmDataPage6Capabilities.PAGE_NR));
+    }
+
+
+    public Flux<AntMessage> getEvents() {
         return eventFlux;
     }
 
