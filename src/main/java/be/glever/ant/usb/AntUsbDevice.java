@@ -129,23 +129,23 @@ public class AntUsbDevice implements Closeable {
         return capabilities;
     }
 
-    public Mono<Boolean> openChannel(AntChannel channel) {
+    public Mono<Void> openChannel(AntChannel channel) {
 
         byte channelNumber = getAvailableChannelNumber();
 
         BiFunction<AntMessage, AntMessage, Boolean> responseMatcher = RequestMatcher::isMatchingResponse;
         return send(new NetworkKeyMessage(channelNumber, channel.getNetwork().getNetworkKey()), responseMatcher)
-                .flatMap(response -> send(new AssignChannelMessage(channelNumber, channel.getChannelType().getValue(), channel.getNetwork().getNetworkNumber()), responseMatcher))
-                .flatMap(response -> send(new ChannelIdMessage(channelNumber, channel.getChannelId().getDeviceNumber(), channel.getChannelId().getDeviceType(), channel.getChannelId().getTransmissionType().getValue()), responseMatcher))
-                .flatMap(response -> send(new ChannelPeriodMessage(channelNumber, channel.getChannelPeriod()), responseMatcher))
-                .flatMap(response -> send(new ChannelRfFrequencyMessage(channelNumber, channel.getRfFrequency()), responseMatcher))
-                .flatMap(response -> send(new OpenChannelMessage(channelNumber), responseMatcher))
-                .flatMap(response -> {
+                .then(send(new AssignChannelMessage(channelNumber, channel.getChannelType().getValue(), channel.getNetwork().getNetworkNumber()), responseMatcher))
+                .then(send(new ChannelIdMessage(channelNumber, channel.getChannelId().getDeviceNumber(), channel.getChannelId().getDeviceType(), channel.getChannelId().getTransmissionType().getValue()), responseMatcher))
+                .then(send(new ChannelPeriodMessage(channelNumber, channel.getChannelPeriod()), responseMatcher))
+                .then(send(new ChannelRfFrequencyMessage(channelNumber, channel.getRfFrequency()), responseMatcher))
+                .then(send(new OpenChannelMessage(channelNumber), responseMatcher))
+                .then(Mono.fromRunnable(() -> {
                     this.antChannels[channelNumber] = channel;
                     channel.setChannelNumber(channelNumber);
                     channel.subscribeTo(this.antMessageProcessor);
-                    return Mono.just(Boolean.TRUE);
-                });
+                }))
+                .then();
     }
 
     /**
