@@ -13,6 +13,7 @@ import be.glever.ant.message.data.AchnowledgeDataMessage;
 import be.glever.ant.message.data.BroadcastDataMessage;
 import be.glever.ant.usb.AntUsbDevice;
 import be.glever.ant.util.ByteUtils;
+import be.glever.antplus.FluxProvider;
 import be.glever.antplus.hrm.datapage.background.HrmDataPage6Capabilities;
 import be.glever.util.logging.Log;
 import reactor.core.publisher.Flux;
@@ -20,7 +21,7 @@ import reactor.core.publisher.Flux;
 import java.time.Duration;
 import java.util.Arrays;
 
-public class HRMChannel extends AntChannel {
+public class HRMChannel extends AntChannel implements FluxProvider {
     public static final byte CHANNEL_FREQUENCY = 0x39;
     public static final byte[] DEVICE_NUMBER_WILDCARD = {0x00, 0x00};
     public static final byte DEFAULT_PUBLIC_NETWORK = 0x00;
@@ -74,6 +75,7 @@ public class HRMChannel extends AntChannel {
     }
 
 
+    @Override
     public Flux<AntMessage> getEvents() {
         return eventFlux;
     }
