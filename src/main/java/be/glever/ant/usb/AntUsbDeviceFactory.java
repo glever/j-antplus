@@ -11,6 +11,7 @@ import java.util.List;
 
 public class AntUsbDeviceFactory {
     private static final int PRODUCT_DYNASTREAM_M_USB = 0x1009;
+    private static final int PRODUCT_DYNASTREAM_USB2 = 0x1008;
     private static final int VENDOR_DYNASTREAM = 0x0fcf;
 
     /**
@@ -21,7 +22,10 @@ public class AntUsbDeviceFactory {
      */
     public static List<AntUsbDevice> getAvailableAntDevices() throws AntException {
         try {
-            return findDevices(UsbHostManager.getUsbServices().getRootUsbHub(), VENDOR_DYNASTREAM, PRODUCT_DYNASTREAM_M_USB);
+            List<AntUsbDevice> usbDevices = new ArrayList<>();
+            usbDevices.addAll(findDevices(UsbHostManager.getUsbServices().getRootUsbHub(), VENDOR_DYNASTREAM, PRODUCT_DYNASTREAM_M_USB));
+            usbDevices.addAll(findDevices(UsbHostManager.getUsbServices().getRootUsbHub(), VENDOR_DYNASTREAM, PRODUCT_DYNASTREAM_USB2));
+            return usbDevices;
         } catch (SecurityException | UsbException e) {
             throw new AntException(e);
         }
