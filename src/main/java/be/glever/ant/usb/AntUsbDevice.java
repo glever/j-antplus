@@ -58,6 +58,10 @@ public class AntUsbDevice implements Closeable {
         this.device = device;
     }
 
+    public UsbDevice getUsbDevice() {
+        return device;
+    }
+
 
     private static Publisher<AntMessage> mapToErrorIfRequired(AntMessage antMessage) {
         LOG.debug(() -> format("in flux, received message %s", antMessage));
