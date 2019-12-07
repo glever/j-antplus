@@ -51,6 +51,8 @@ public class AntUsbDevice implements Closeable {
     private AntUsbWriter antUsbWriter;
     private AntChannel[] antChannels;
 
+    private boolean isInitialized = false;
+
 
     public AntUsbDevice(UsbDevice device) {
         this.device = device;
@@ -73,19 +75,27 @@ public class AntUsbDevice implements Closeable {
     }
 
     public void initialize() throws AntException {
+        if (isInitialized)
+            return;
 
         try {
             initUsbInterface();
             initAntDevice();
+            isInitialized = true;
         } catch (Exception e) {
             throw new AntException(e);
         }
+    }
+
+    public boolean isInitialized() {
+        return isInitialized;
     }
 
     @Override
     public void close() throws IOException {
         try {
             resetUsbDevice();
+            isInitialized = false;
         } catch (Exception e) {
             LOG.error(() -> "Reset ant stick failed. Continuing with shutdown of usb interface.", e);
         }
@@ -96,6 +106,7 @@ public class AntUsbDevice implements Closeable {
             if (activeUsbInterface.isClaimed()) {
                 activeUsbInterface.release();
             }
+            isInitialized = false;
         } catch (Exception e) {
             throw new IOException(e.getMessage(), e);
         }
