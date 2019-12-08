@@ -1,15 +1,29 @@
 # j-antplus
-Java Library for speaking with ANT / ANT+ devices through a usb dongle.
+Java Library for speaking with ANT / ANT+ devices through a USB dongle.
 
-I set up this project trying to talk to my personal ant+ devices.
-Goal is to implement needed ant messages and ant+ datapages in order to talk to following set of devices:
+I set up this project trying to talk to my personal ANT+ devices.
+Goal is to implement needed ant messages and ANT+ datapages in order to talk to following set of devices:
+
 * Heart rate monitor:
-	* Basic support. Integrates with Garmin HRM3SS. Check out HrmTest_Main under src/test
+	* Basic support. Tested with Garmin HRM3SS. Check out `HrmTest_Main` under `src/test`
 	* No support for legacy format (yet, because I don't own a legacy device). If you need it, check out HrmChannel to sniff the datapage 1st bit alternating every 4 packages.
-* Speed sensor (TODO)
-* Cadence sensor(TODO)
-* Power meter(TODO)
-* Ant FE-c trainer(TODO)
+* Speed sensor
+	* Basic support. Tested with Garmin Speed Sensor.
+	* The sensor only measures the number of wheel revolutions, the actual speed has to be calculated by a consumer of this library in conjunction with the wheel's diameter.
+		Check out `SpeedTest_Main` under `src/test`
+* Cadence sensor
+	* Basic support. Tested with Garmin Cadence Sensor.
+	* The sensor only measures the number of crank revolutions, the actual cadence has to be calculated by a consumer of this library from two different measurements.
+		Check out `CadenceTest_Main` under `src/test`
+* Combined speed and cadence sensor
+	* Basic support. Not tested with a physical device yet. Check out `SpeedAndCadenceTest_Main` under `src/test`
+* Power meter
+	* Basic support. Tested with Garmin Vector 3. Check out `PowerTest_Main` under `src/test`
+	* Not all data pages implemented, yet.
+* Ant FE-C trainer
+	* Basic support. Tested with Elite Suito and Tacx. Check out `FecTest_Main` under `src/test`
+	* Not all data pages implemented, yet.
+	* TODO: Send command to adjust resistance
 
 
 # Current status: 
