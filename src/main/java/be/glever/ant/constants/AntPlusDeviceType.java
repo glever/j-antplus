@@ -1,7 +1,12 @@
 package be.glever.ant.constants;
 
 public enum AntPlusDeviceType {
-    HRM((byte) 0x78);
+    Fec((byte) 0x11),
+    Power((byte) 0x0B),
+    HRM((byte) 0x78),
+    SpeedCadence((byte) 0x79),
+    Cadence((byte) 0x7A),
+    Speed((byte) 0x7B);
 
     private byte value;
 

@@ -1,4 +1,4 @@
-package be.glever.antplus.hrm;
+package be.glever.antplus.speedcadence;
 
 import be.glever.ant.channel.AntChannel;
 import be.glever.ant.channel.AntChannelId;
@@ -9,53 +9,62 @@ import be.glever.ant.constants.AntNetworkKeys;
 import be.glever.ant.constants.AntPlusDeviceType;
 import be.glever.ant.message.AntMessage;
 import be.glever.ant.message.channel.ChannelEventOrResponseMessage;
-import be.glever.ant.message.data.AchnowledgeDataMessage;
 import be.glever.ant.message.data.BroadcastDataMessage;
 import be.glever.ant.usb.AntUsbDevice;
 import be.glever.ant.util.ByteUtils;
 import be.glever.antplus.FluxProvider;
-import be.glever.antplus.hrm.datapage.background.HrmDataPage6Capabilities;
 import be.glever.util.logging.Log;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
 import java.util.Arrays;
 
-public class HRMChannel extends AntChannel implements FluxProvider {
-    public static final byte CHANNEL_FREQUENCY = 0x39;
+public class SpeedAndCadenceChannel extends AntChannel implements FluxProvider {
+    public static final byte CHANNEL_FREQUENCY = 0x39;  // RF Channel 57 (2457MHz)
     public static final byte[] DEVICE_NUMBER_WILDCARD = {0x00, 0x00};
     public static final byte DEFAULT_PUBLIC_NETWORK = 0x00;
-    private static final Log LOG = Log.getLogger(HRMChannel.class);
+    private static final Log LOG = Log.getLogger(SpeedAndCadenceChannel.class);
     private final AntUsbDevice device;
-    byte[] CHANNEL_PERIOD = ByteUtils.toUShort(8070);
 
-    // todo doesnt belong here
-    private int heartBeatEventTime;
-
+    /**
+     * Foo
+     *
+     * Allowed values:
+     *  8086/32768 seconds (~4.05 Hz)
+     * 16172/32768 seconds (~2.03 Hz)
+     * 32344/32768 seconds (~1.01 Hz)
+     *
+     * TODO: Allow setting the frequency
+     */
+    public static final byte[] CHANNEL_PERIOD = ByteUtils.toUShort(8086);
 
     private Flux<AntMessage> eventFlux;
 
     /**
-     * Pair with any (the first found) HRM.
+     * Pair with any (the first found) SpeedCadence.
      *
      * @param device
      */
-    public HRMChannel(AntUsbDevice device) {
+    public SpeedAndCadenceChannel(AntUsbDevice device) {
         this(device, DEVICE_NUMBER_WILDCARD);
     }
 
     /**
      * Pair with a known device.
      *
+     * > The device number needs to be as unique as possible across production units. An example of achieving this specification is
+     * to use the lowest two bytes of the serial number of the device for the device number of the ANT channel parameter; ensure
+     * that the device has a set serial number.
+     *
      * @param device
      * @param deviceNumber
      */
-    public HRMChannel(AntUsbDevice device, byte[] deviceNumber) {
+    public SpeedAndCadenceChannel(AntUsbDevice device, byte[] deviceNumber) {
         this.device = device;
         setChannelType(AntChannelType.BIDIRECTIONAL_SLAVE);
         setNetwork(new AntChannelNetwork(DEFAULT_PUBLIC_NETWORK, AntNetworkKeys.ANT_PLUS_NETWORK_KEY));
         setRfFrequency(CHANNEL_FREQUENCY);
-        setChannelId(new AntChannelId(AntChannelTransmissionType.PAIRING_TRANSMISSION_TYPE, AntPlusDeviceType.HRM, deviceNumber));
+        setChannelId(new AntChannelId(AntChannelTransmissionType.PAIRING_TRANSMISSION_TYPE, AntPlusDeviceType.SpeedCadence, deviceNumber));
         setChannelPeriod(CHANNEL_PERIOD);
 
         this.device.openChannel(this).block(Duration.ofSeconds(10));
@@ -66,14 +75,7 @@ public class HRMChannel extends AntChannel implements FluxProvider {
         eventFlux = messageFlux
                 .filter(this::isMatchingAntMessage)
                 .distinctUntilChanged(AntMessage::toByteArray, Arrays::equals);
-
-//        messageFlux.take(1).subscribe(message -> requestHrmInfo());
     }
-
-    private void requestHrmInfo() {
-        this.device.send(new AchnowledgeDataMessage(this.getChannelNumber(), HrmDataPage6Capabilities.PAGE_NR));
-    }
-
 
     @Override
     public Flux<AntMessage> getEvents() {
@@ -88,6 +90,4 @@ public class HRMChannel extends AntChannel implements FluxProvider {
         }
         return false;
     }
-
-
 }
