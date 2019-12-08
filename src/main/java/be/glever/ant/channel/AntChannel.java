@@ -14,6 +14,7 @@ public abstract class AntChannel {
 
     public abstract void subscribeTo(Flux<AntMessage> messageFlux);
 
+    public abstract Flux<AntMessage> getEvents();
 
     public AntChannelType getChannelType() {
         return channelType;
