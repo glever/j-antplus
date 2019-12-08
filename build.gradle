@@ -1,9 +1,23 @@
 plugins {
+	id 'maven-publish'
 }
 apply plugin: 'java-library'
 
 repositories {
+	mavenLocal()
     jcenter()
+}
+
+publishing {
+	publications {
+		maven(MavenPublication) {
+			groupId = 'be.glever'
+			artifactId = 'j-antplus'
+			version = '0.0.1-SNAPSHOT'
+
+			from components.java
+		}
+	}
 }
 
 dependencies {
@@ -16,8 +30,6 @@ dependencies {
 	implementation 'ch.qos.logback:logback-core:1.2.3'
 	implementation 'ch.qos.logback:logback-classic:1.2.3'
 
-    // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
-    
 }
 

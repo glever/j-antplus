@@ -11,6 +11,14 @@ Goal is to implement needed ant messages and ant+ datapages in order to talk to 
 * Power meter(TODO)
 * Ant FE-c trainer(TODO)
 
+
+# Current status: 
+Codebase still unstable but foundation is shaping up. Expect a few heavy refactors until things stabilize.
+Check out the Hrm/SpeedTest/Cadence/Fec examples to get started. Many thanks to https://github.com/JohnAZoidberg for help with implementing most of the devices.
+
+If you want to re-use this library in another project run `gradle publishToMavenLocal`. 
+Then you can add a maven dependency to `be.glever:j-antplus:0.0.1-SNAPSHOT` in order to use it.
+
 # Compatibility notes
 ## Windows
 This project uses usb4java-javax, which underneath uses libusb.
@@ -26,7 +34,3 @@ echo 'SUBSYSTEM=="usb", MODE="0660", GROUP="plugdev"' > /etc/udev/rules.d/00-usb
 udevadm control --reload-rules
 ```
 After this, unplug and re-plug the dongle.
-
-# Current status: 
-Codebase still unstable but foundation is shaping up. Expect a few heavy refactors until things stabilize.
-Check out the Hrm example to get started.
