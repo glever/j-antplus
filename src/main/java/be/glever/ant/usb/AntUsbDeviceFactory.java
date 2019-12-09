@@ -15,6 +15,11 @@ public class AntUsbDeviceFactory {
     private static final int VENDOR_DYNASTREAM = 0x0fcf;
 
     /**
+     * Keep track of AntUsbDevices, so that the same instance is reused for the same UsbDevice
+     */
+    private static List<AntUsbDevice> antUsbDevices = new ArrayList<>();
+
+    /**
      * Returns a list of <b>uninitialized</b> {@link AntUsbDevice}s that are found on the system.
      *
      * @return
@@ -40,10 +45,26 @@ public class AntUsbDeviceFactory {
                 resultList.addAll(findDevices((UsbHub) device, vendorId, productId));
             } else {
                 if (device.getUsbDeviceDescriptor().idVendor() == vendorId && device.getUsbDeviceDescriptor().idProduct() == productId) {
-                    resultList.add(new AntUsbDevice(device));
+                    resultList.add(resuseOrCreateAntUsbDevice(device));
                 }
             }
         });
         return resultList;
+    }
+
+    private static AntUsbDevice resuseOrCreateAntUsbDevice(UsbDevice device) {
+        AntUsbDevice foundDevice = null;
+
+        for (AntUsbDevice antDev : antUsbDevices) {
+            if (antDev.getUsbDevice() == device)
+                foundDevice = antDev;
+        }
+
+        if (foundDevice == null) {
+            foundDevice = new AntUsbDevice(device);
+            antUsbDevices.add(foundDevice);
+        }
+
+        return foundDevice;
     }
 }
