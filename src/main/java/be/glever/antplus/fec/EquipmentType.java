@@ -26,24 +26,4 @@ public enum EquipmentType {
     public byte value() {
         return value;
     }
-
-    @Override
-    public String toString() {
-        switch (this) {
-            case Treadmill:
-                return "Treadmill";
-            case Elliptical:
-                return "Elliptical";
-            case Rower:
-                return "Rower";
-            case Climber:
-                return "Climber";
-            case NordicSkier:
-                return "Nordic Skier";
-            case StationaryBike:
-                return "Stationary bike";
-            default:
-                throw new IllegalArgumentException();
-        }
-    }
 }
