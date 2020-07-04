@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AntUsbDeviceFactory {
-    private static final int PRODUCT_DYNASTREAM_M_USB = 0x1009;
-    private static final int PRODUCT_DYNASTREAM_USB2 = 0x1008;
-    private static final int VENDOR_DYNASTREAM = 0x0fcf;
+    public static final int PRODUCT_DYNASTREAM_M_USB = 0x1009;
+    public static final int PRODUCT_DYNASTREAM_USB2 = 0x1008;
+    public static final int VENDOR_DYNASTREAM = 0x0fcf;
 
     /**
      * Keep track of AntUsbDevices, so that the same instance is reused for the same UsbDevice

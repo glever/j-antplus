@@ -47,4 +47,10 @@ I followed this approach (which may give too wide permissions to your taste): ht
 echo 'SUBSYSTEM=="usb", MODE="0660", GROUP="plugdev"' > /etc/udev/rules.d/00-usb-permissions.rules
 udevadm control --reload-rules
 ```
+
+update: on manjaro, above didn't work (permission denied on the file), but this works
+```
+echo 'ATTRS{idVendor}=="fcf", ATTRS{idProduct}=="1009", MODE="0666"' > /etc/udev/rules.d/99-my-user-permissions.rules
+udevadm control --reload-rules
+```
 After this, unplug and re-plug the dongle.
