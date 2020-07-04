@@ -30,7 +30,6 @@ Goal is to implement needed ant messages and ANT+ datapages in order to talk to 
 Codebase still unstable but foundation is shaping up. Expect a few heavy refactors until things stabilize.
 Check out the Hrm/SpeedTest/Cadence/Fec examples to get started. Many thanks to https://github.com/JohnAZoidberg for help with implementing most of the devices.
 
-If you want to re-use this library in another project run `gradle publishToMavenLocal`. 
 Then you can add a maven dependency to `be.glever:j-antplus:0.0.1-SNAPSHOT` in order to use it.
 
 # Compatibility notes
