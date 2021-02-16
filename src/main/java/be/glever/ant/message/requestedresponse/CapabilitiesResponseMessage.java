@@ -27,9 +27,9 @@ public class CapabilitiesResponseMessage extends AbstractAntMessage {
 
     @Override
     public void setMessageBytes(byte[] messageContentBytes) throws AntException {
-        if (messageContentBytes.length != 8) {
+        if (messageContentBytes.length < 6 || messageContentBytes.length > 8) {
             throw new AntException(
-                    String.format("Incorrect message length. Given: %s, expected: 8", messageContentBytes.length));
+                    String.format("Incorrect message length. Given: %s, expected: 6-8", messageContentBytes.length));
         }
         this.messageBytes = messageContentBytes;
     }
@@ -135,7 +135,7 @@ public class CapabilitiesResponseMessage extends AbstractAntMessage {
     }
 
     private byte getAdvancedOptions3Byte() {
-        return messageBytes[6];
+        return messageBytes.length > 6 ? messageBytes[6] : 0;
     }
 
     public boolean getAdvancedBurstEnabled() {
@@ -167,7 +167,7 @@ public class CapabilitiesResponseMessage extends AbstractAntMessage {
     }
 
     private byte getAdvancedOptions4Byte() {
-        return messageBytes[7];
+        return messageBytes.length > 7 ? messageBytes[7] : 0;
     }
 
     public boolean getRfActiveNotificationEnabled() {
