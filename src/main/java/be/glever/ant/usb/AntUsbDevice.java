@@ -23,6 +23,7 @@ import reactor.core.scheduler.Schedulers;
 import javax.usb.*;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -279,7 +280,7 @@ public class AntUsbDevice implements Closeable {
         this.serialNumber = serialNumberMessage.getSerialNumber();
 
         LOG.debug(() -> format("Capabilities: %s", this.capabilities.toString()));
-        LOG.debug(() -> format("Ant Version: %s", ByteUtils.hexString(this.antVersion)));
+        LOG.debug(() -> format("Ant Version: %s", new String(this.antVersion, StandardCharsets.US_ASCII)));
         LOG.debug(() -> format("SerialNumber: %s", ByteUtils.hexString(this.serialNumber)));
     }
 
